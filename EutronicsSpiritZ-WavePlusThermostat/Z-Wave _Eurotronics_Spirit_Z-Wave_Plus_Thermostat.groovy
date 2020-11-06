@@ -1,12 +1,12 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.1.0000
+ *  Version v1.0.1.0001
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
@@ -25,6 +25,7 @@ metadata {
         capability "Battery"
 
         attribute "valve", "String"
+        attribute "version", "String"
 
 		fingerprint deviceId: "0x01"
         fingerprint manufacturerId: "328"
@@ -45,6 +46,7 @@ preferences {
 } 
 
 def configure() {  
+ 	setVersion()
     def cmds = []
     cmds << zwave.configurationV1.configurationSet(configurationValue:  LCDinvert == "Yes" ? [0x01] : [0x00], parameterNumber:1, size:1, scaledConfigurationValue:  LCDinvert == "Yes" ? 0x01 : 0x00)
     cmds << zwave.configurationV1.configurationGet(parameterNumber:1)
@@ -63,6 +65,15 @@ def configure() {
     
     sendCommands(cmds)   
  }
+ 
+ private setVersion(){
+    def map = [:]
+ 	map.name = "version"
+    map.isStateChanged = true
+    map.value = "v1.0.1.0001"
+    sendEvent(map)
+ }
+
 
 def parse(String description)
 {

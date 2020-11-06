@@ -14,7 +14,7 @@
  *
  */
 metadata {
-	definition (name: "Z-Wave - Eurotronics Spirit Z-Wave Plus Thermostat", namespace: "lolcutus", author: "Lolcutus") {
+	definition (name: "Z-Wave - Eurotronics Spirit Z-Wave Plus Thermostat", namespace: "lolcutus", author: "Lolcutus", importUrl: "https://raw.githubusercontent.com/lolcutus/hubitat/master/EutronicsSpiritZ-WavePlusThermostat/Z-Wave%20_Eurotronics_Spirit_Z-Wave_Plus_Thermostat.groovy") {
 		capability "Actuator"
 		capability "Temperature Measurement"
 		capability "Thermostat"
@@ -33,15 +33,15 @@ metadata {
 }
 
 preferences {
-        input(name: "debugLogging", type: "bool", title: "Enable debug logging", description: "" , defaultValue: false, submitOnChange: true, displayDuringSetup: false, required: false)
-        input(name: "infoLogging", type: "bool", title: "Enable info logging", description: "", defaultValue: true, submitOnChange: true, displayDuringSetup: false, required: false)
-        input "LCDinvert", "enum", title: "Invert LCD", options: ["No", "Yes"], defaultValue: "No", required: false, displayDuringSetup: true
-        input "LCDtimeout", "number", title: "LCD Timeout (in secs)", description: "LCD will switch off after this time (5 - 30secs)", range: "5..30", displayDuringSetup: true
-        input "LCDBackgroundLight", "enum", title: "LCD background light", options: ["No", "Yes"], defaultValue: "No", required: true, displayDuringSetup: true
-        input "BatteryStatus", "enum", title: "Battery status", options: ["Only when low", "One time per day"], defaultValue: "Only when low", required: true, displayDuringSetup: true
-        input "TemperatureReport", "decimal", title: "Temperature report", description: "0 not send range 0,1 to 5 ", range: "0.1..5", displayDuringSetup: true
-        input "ValveReporting", "enum", title: "Report valve", options: ["No", "Yes"], defaultValue: "No", required: true, displayDuringSetup: true
-        input "windowOpen", "enum", title: "Window Open Detection",description: "Sensitivity of Open Window Detection", options: ["Disabled", "Low", "Medium", "High" ], defaultValue: "Disabled", required: false, displayDuringSetup: false
+    input(name: "debugLogging", type: "bool", title: "Enable debug logging", description: "" , defaultValue: false, submitOnChange: true, displayDuringSetup: false, required: false)
+    input(name: "infoLogging", type: "bool", title: "Enable info logging", description: "", defaultValue: true, submitOnChange: true, displayDuringSetup: false, required: false)
+    input "LCDinvert", "enum", title: "Invert LCD", options: ["No", "Yes"], defaultValue: "No", required: false, displayDuringSetup: true
+    input "LCDtimeout", "number", title: "LCD Timeout (in secs)", description: "LCD will switch off after this time (5 - 30secs)", range: "5..30", displayDuringSetup: true
+    input "LCDBackgroundLight", "enum", title: "LCD background light", options: ["No", "Yes"], defaultValue: "No", required: true, displayDuringSetup: true
+    input "BatteryStatus", "enum", title: "Battery status", options: ["Only when low", "One time per day"], defaultValue: "Only when low", required: true, displayDuringSetup: true
+    input "TemperatureReport", "decimal", title: "Temperature report", description: "0 not send range 0,1 to 5 ", range: "0.1..5", displayDuringSetup: true
+    input "ValveReporting", "enum", title: "Report valve", options: ["No", "Yes"], defaultValue: "No", required: true, displayDuringSetup: true
+    input "windowOpen", "enum", title: "Window Open Detection",description: "Sensitivity of Open Window Detection", options: ["Disabled", "Low", "Medium", "High" ], defaultValue: "Disabled", required: false, displayDuringSetup: false
 } 
 
 def configure() {  
@@ -51,7 +51,7 @@ def configure() {
     cmds << zwave.configurationV1.configurationSet(configurationValue: LCDtimeout == null ? [0] : [LCDtimeout], parameterNumber:2, size:1, scaledConfigurationValue: LCDtimeout == null ? 0 :  LCDtimeout)
     cmds << zwave.configurationV1.configurationGet(parameterNumber:2)
     cmds << zwave.configurationV1.configurationSet(configurationValue:  LCDBackgroundLight == "Yes" ? [0x01] : [0x00], parameterNumber:3, size:1, scaledConfigurationValue:  LCDBackgroundLight == "Yes" ? 0x01 : 0x00)
-    cmds <<  zwave.configurationV1.configurationGet(parameterNumber:3)
+    cmds << zwave.configurationV1.configurationGet(parameterNumber:3)
     cmds << zwave.configurationV1.configurationSet(configurationValue:  BatteryStatus == "One time per day" ? [0x01] : [0x00], parameterNumber:4, size:1, scaledConfigurationValue:  BatteryStatus == "One time per day" ? 0x01 : 0x00)
     cmds << zwave.configurationV1.configurationGet(parameterNumber:4)
     cmds << zwave.configurationV1.configurationSet(configurationValue: TemperatureReport == null ? [0] : [TemperatureReport*10], parameterNumber:5, size:1, scaledConfigurationValue: TemperatureReport == null ? 0 :  TemperatureReport*10)
@@ -375,24 +375,24 @@ def setThermostatMode(String value) {
 
 
 def off() {
-	delayBetween([
-		zwave.thermostatModeV2.thermostatModeSet(mode: 0).format(),
-		zwave.thermostatModeV2.thermostatModeGet().format()
-	], standardDelay)
+	def cmds = []
+    cmds << zwave.thermostatModeV2.thermostatModeSet(mode: 0)
+    cmds << zwave.thermostatModeV2.thermostatModeGet()
+    sendCommands(cmds)
 }
 
 def heat() {
-	delayBetween([
-		zwave.thermostatModeV2.thermostatModeSet(mode: 1).format(),
-		zwave.thermostatModeV2.thermostatModeGet().format()
-	], standardDelay)
+	def cmds = []
+    cmds << zwave.thermostatModeV2.thermostatModeSet(mode: 1)
+    cmds << zwave.thermostatModeV2.thermostatModeGet()
+    sendCommands(cmds)
 }
 
 def emergencyHeat() {
-    delayBetween([
-		zwave.thermostatModeV2.thermostatModeSet(mode: 15).format(),
-		zwave.thermostatModeV2.thermostatModeGet().format()
-	], standardDelay)
+    def cmds = []
+    cmds << zwave.thermostatModeV2.thermostatModeSet(mode: 15)
+    cmds << zwave.thermostatModeV2.thermostatModeGet()
+    sendCommands(cmds)
 }
 
 def auto() {

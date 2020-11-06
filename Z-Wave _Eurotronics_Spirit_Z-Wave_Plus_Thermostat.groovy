@@ -1,0 +1,474 @@
+/**
+ *  Copyright 2020 Lolcutus
+ *
+ *  Version v1.0.0.1000
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License. You may obtain a copy of the License at:
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+ *  for the specific language governing permissions and limitations under the License.
+ *
+ */
+metadata {
+	definition (name: "Z-Wave - Eurotronics Spirit Z-Wave Plus Thermostat", namespace: "lolcutus", author: "Lolcutus") {
+		capability "Actuator"
+		capability "Temperature Measurement"
+		capability "Thermostat"
+		capability "Configuration"
+		capability "Polling"
+		capability "Sensor"
+        capability "Refresh"
+        capability "Battery"
+
+        attribute "valve", "String"
+
+		fingerprint deviceId: "0x01"
+        fingerprint manufacturerId: "328"
+        fingerprint inClusters: "0x5E,0x85,0x59,0x86,0x72,0x5A,0x75,0x31,0x26,0x40,0x43,0x80,0x70,0x71,0x73,0x98,0x9F,0x55,0x6C,0x7A"
+	}
+}
+
+preferences {
+        input(name: "debugLogging", type: "bool", title: "Enable debug logging", description: "" , defaultValue: false, submitOnChange: true, displayDuringSetup: false, required: false)
+        input(name: "infoLogging", type: "bool", title: "Enable info logging", description: "", defaultValue: true, submitOnChange: true, displayDuringSetup: false, required: false)
+        input "LCDinvert", "enum", title: "Invert LCD", options: ["No", "Yes"], defaultValue: "No", required: false, displayDuringSetup: true
+        input "LCDtimeout", "number", title: "LCD Timeout (in secs)", description: "LCD will switch off after this time (5 - 30secs)", range: "5..30", displayDuringSetup: true
+        input "LCDBackgroundLight", "enum", title: "LCD background light", options: ["No", "Yes"], defaultValue: "No", required: true, displayDuringSetup: true
+        input "BatteryStatus", "enum", title: "Battery status", options: ["Only when low", "One time per day"], defaultValue: "Only when low", required: true, displayDuringSetup: true
+        input "TemperatureReport", "decimal", title: "Temperature report", description: "0 not send range 0,1 to 5 ", range: "0.1..5", displayDuringSetup: true
+        input "ValveReporting", "enum", title: "Report valve", options: ["No", "Yes"], defaultValue: "No", required: true, displayDuringSetup: true
+        input "windowOpen", "enum", title: "Window Open Detection",description: "Sensitivity of Open Window Detection", options: ["Disabled", "Low", "Medium", "High" ], defaultValue: "Disabled", required: false, displayDuringSetup: false
+} 
+
+def configure() {  
+    def cmds = []
+    cmds << zwave.configurationV1.configurationSet(configurationValue:  LCDinvert == "Yes" ? [0x01] : [0x00], parameterNumber:1, size:1, scaledConfigurationValue:  LCDinvert == "Yes" ? 0x01 : 0x00)
+    cmds << zwave.configurationV1.configurationGet(parameterNumber:1)
+    cmds << zwave.configurationV1.configurationSet(configurationValue: LCDtimeout == null ? [0] : [LCDtimeout], parameterNumber:2, size:1, scaledConfigurationValue: LCDtimeout == null ? 0 :  LCDtimeout)
+    cmds << zwave.configurationV1.configurationGet(parameterNumber:2)
+    cmds << zwave.configurationV1.configurationSet(configurationValue:  LCDBackgroundLight == "Yes" ? [0x01] : [0x00], parameterNumber:3, size:1, scaledConfigurationValue:  LCDBackgroundLight == "Yes" ? 0x01 : 0x00)
+    cmds <<  zwave.configurationV1.configurationGet(parameterNumber:3)
+    cmds << zwave.configurationV1.configurationSet(configurationValue:  BatteryStatus == "One time per day" ? [0x01] : [0x00], parameterNumber:4, size:1, scaledConfigurationValue:  BatteryStatus == "One time per day" ? 0x01 : 0x00)
+    cmds << zwave.configurationV1.configurationGet(parameterNumber:4)
+    cmds << zwave.configurationV1.configurationSet(configurationValue: TemperatureReport == null ? [0] : [TemperatureReport*10], parameterNumber:5, size:1, scaledConfigurationValue: TemperatureReport == null ? 0 :  TemperatureReport*10)
+    cmds << zwave.configurationV1.configurationGet(parameterNumber:5)
+    cmds << zwave.configurationV1.configurationSet(configurationValue:  ValveReporting == "Yes" ? [0x01] : [0x00], parameterNumber:6, size:1, scaledConfigurationValue:  ValveReporting == "Yes" ? 0x01 : 0x00)
+    cmds << zwave.configurationV1.configurationGet(parameterNumber:6)
+    cmds << zwave.configurationV1.configurationSet(configurationValue:  windowOpen == "Low" ? [0x01] : windowOpen == "Medium" ? [0x02] : windowOpen == "High" ? [0x03] : [0x00], parameterNumber:7, size:1, scaledConfigurationValue:  windowOpen == "Low" ? 0x01 : windowOpen == "Medium" ? 0x02 : windowOpen == "High" ? 0x03 : 0x00)
+    cmds << zwave.configurationV1.configurationGet(parameterNumber:7)
+    
+    sendCommands(cmds)   
+ }
+
+def parse(String description)
+{
+    debugLog("Parsing_1 '${description}'")
+    def cmd = zwave.parse(description, [0x42:1, 0x43:2, 0x31: 3])
+    if(!cmd){
+        warnLog("Non-parsed event: ${description}")
+        return null
+    }
+    debugLog("Command ${cmd}")
+    def event =zwaveEvent(cmd)
+    if(event){
+        event.isStateChange = true       
+        sendEvent(event)
+        infoLog("Log event: ${event}")
+    }
+}
+
+def zwaveEvent(hubitat.zwave.commands.switchmultilevelv3.SwitchMultilevelReport cmd){
+	debugLog("Received switchmultilevelv3.SwitchMultilevelReport - ${cmd}")
+    def map = [:]
+    map.name = "valve"
+    state.valve = cmd.value
+    map.value = cmd.value
+    map.unit = "%"
+    infoLog("Valve open '${cmd.value}'%")
+    def map2 = [:]
+    if(cmd.value == 0){
+        state.thermostatOperatingState = "idle"
+        map2.value = "idle" 
+        infoLog( "Operating State to idle")
+    }else{
+        state.thermostatOperatingState = "heating"
+        map2.value = "heating" 
+        infoLog( "Operating State heating")
+    }
+    map2.name = "thermostatOperatingState"
+    map2.isStateChanged = true
+    sendEvent(map2)
+  map
+}
+
+def pollDevice() {
+    debugLog("pollDevice() - redirecting to poll()")
+    poll()
+}
+
+def zwaveEvent(hubitat.zwave.commands.configurationv2.ConfigurationReport cmd ) {
+    infoLog("Recived configuration ${cmd}")
+}
+
+def zwaveEvent(hubitat.zwave.commands.thermostatsetpointv2.ThermostatSetpointReport cmd)
+{
+    debugLog("Received thermostatsetpointv2.ThermostatSetpointReport - ${cmd}")
+	def cmdScale = cmd.scale == 1 ? "F" : "C"
+	def map = [:]
+	map.value = convertTemperatureIfNeeded(cmd.scaledValue, cmdScale, cmd.precision)
+	map.unit = getTemperatureScale()
+	switch (cmd.setpointType) {
+		case 1:
+			map.name = "heatingSetpoint"
+			break;
+		case 2:
+			map.name = "coolingSetpoint"
+			break;
+		default:
+			return [:]
+	}
+	state.size = cmd.size
+	state.scale = cmd.scale
+	state.precision = cmd.precision
+	map
+}
+
+def zwaveEvent(hubitat.zwave.commands.sensormultilevelv2.SensorMultilevelReport cmd)
+{
+    debugLog("Received sensormultilevelv2.SensorMultilevelReport - ${cmd}")
+	def map = [:]
+    map.isStateChange = true
+	if (cmd.sensorType == 1) {
+		map.value = convertTemperatureIfNeeded(cmd.scaledSensorValue, cmd.scale == 1 ? "F" : "C", cmd.precision)
+		map.unit = getTemperatureScale()
+		map.name = "temperature"
+	} else if (cmd.sensorType == 5) {
+		map.value = cmd.scaledSensorValue
+		map.unit = "%"
+		map.name = "humidity"
+	}
+	map
+}
+
+def zwaveEvent(hubitat.zwave.commands.thermostatoperatingstatev1.ThermostatOperatingStateReport cmd)
+{
+    debugLog("Received thermostatoperatingstatev1.ThermostatOperatingStateReport - ${cmd}")
+	def map = [:]
+	switch (cmd.operatingState) {
+		case hubitat.zwave.commands.thermostatoperatingstatev1.ThermostatOperatingStateReport.OPERATING_STATE_IDLE:
+			map.value = "idle"
+			break
+		case hubitat.zwave.commands.thermostatoperatingstatev1.ThermostatOperatingStateReport.OPERATING_STATE_HEATING:
+			map.value = "heating"
+			break
+		case hubitat.zwave.commands.thermostatoperatingstatev1.ThermostatOperatingStateReport.OPERATING_STATE_COOLING:
+			map.value = "cooling"
+			break
+		case hubitat.zwave.commands.thermostatoperatingstatev1.ThermostatOperatingStateReport.OPERATING_STATE_FAN_ONLY:
+			map.value = "fan only"
+			break
+		case hubitat.zwave.commands.thermostatoperatingstatev1.ThermostatOperatingStateReport.OPERATING_STATE_PENDING_HEAT:
+			map.value = "pending heat"
+			break
+		case hubitat.zwave.commands.thermostatoperatingstatev1.ThermostatOperatingStateReport.OPERATING_STATE_PENDING_COOL:
+			map.value = "pending cool"
+			break
+		case hubitat.zwave.commands.thermostatoperatingstatev1.ThermostatOperatingStateReport.OPERATING_STATE_VENT_ECONOMIZER:
+			map.value = "vent economizer"
+			break
+	}
+	map.name = "thermostatOperatingState"
+ 	map
+}
+
+def zwaveEvent(hubitat.zwave.commands.thermostatfanstatev1.ThermostatFanStateReport cmd) {
+    debugLog("Received thermostatoperatingstatev1.ThermostatFanStateReport - ${cmd}")
+	def map = [name: "thermostatFanState", unit: ""]
+	switch (cmd.fanOperatingState) {
+		case 0:
+			map.value = "idle"
+			break
+		case 1:
+			map.value = "running"
+			break
+		case 2:
+			map.value = "running high"
+			break
+	}
+	map
+}
+
+def zwaveEvent(hubitat.zwave.commands.thermostatmodev2.ThermostatModeReport cmd) {
+    debugLog("Received thermostatmodev2.ThermostatModeReport - ${cmd}")
+	def map = [:]
+	switch (cmd.mode) {
+		case hubitat.zwave.commands.thermostatmodev2.ThermostatModeReport.MODE_OFF:
+			map.value = "off"
+			break
+		case hubitat.zwave.commands.thermostatmodev2.ThermostatModeReport.MODE_HEAT:
+			map.value = "heat"
+			break
+		case 15:
+			map.value = "emergency heat"
+			break
+		case hubitat.zwave.commands.thermostatmodev2.ThermostatModeReport.MODE_COOL:
+			map.value = "cool"
+			break
+		case hubitat.zwave.commands.thermostatmodev2.ThermostatModeReport.MODE_AUTO:
+			map.value = "auto"
+			break
+	}
+	map.name = "thermostatMode"
+	map
+}
+
+def zwaveEvent(hubitat.zwave.commands.thermostatfanmodev3.ThermostatFanModeReport cmd) {
+    debugLog("Received thermostatmodev2.ThermostatFanModeReport - ${cmd}")
+	def map = [:]
+	switch (cmd.fanMode) {
+		case hubitat.zwave.commands.thermostatfanmodev3.ThermostatFanModeReport.FAN_MODE_AUTO_LOW:
+			map.value = "fanAuto"
+			break
+		case hubitat.zwave.commands.thermostatfanmodev3.ThermostatFanModeReport.FAN_MODE_LOW:
+			map.value = "fanOn"
+			break
+		case hubitat.zwave.commands.thermostatfanmodev3.ThermostatFanModeReport.FAN_MODE_CIRCULATION:
+			map.value = "fanCirculate"
+			break
+	}
+	map.name = "thermostatFanMode"
+ 	map
+}
+
+def zwaveEvent(hubitat.zwave.commands.thermostatmodev2.ThermostatModeSupportedReport cmd) {
+    debugLog("Received thermostatmodev2.ThermostatModeSupportedReport - ${cmd}")
+    def map = [:]
+	def supportedModes = ""
+	if(cmd.off) { supportedModes += "off " }
+	if(cmd.heat) { supportedModes += "heat " }
+	if(cmd.auxiliaryemergencyHeat) { supportedModes += "emergency heat " }
+	if(cmd.cool) { supportedModes += "cool " }
+	if(cmd.auto) { supportedModes += "auto " }
+    
+    if(supportedModes == ""){
+        supportedModes = "off, heat, emergency heat"
+    }
+    supportedModes= "[" + supportedModes + "]"
+	map.value = supportedModes
+    map.name = "supportedThermostatModes"
+	map
+}
+
+def zwaveEvent(hubitat.zwave.commands.thermostatfanmodev3.ThermostatFanModeSupportedReport cmd) {
+    debugLog("Received thermostatfanmodev3.ThermostatFanModeSupportedReport - ${cmd}")
+	def supportedFanModes = ""
+	if(cmd.auto) { supportedFanModes += "fanAuto " }
+	if(cmd.low) { supportedFanModes += "fanOn " }
+	if(cmd.circulation) { supportedFanModes += "fanCirculate " }
+
+	state.supportedFanModes = supportedFanModes
+    
+}
+def zwaveEvent(hubitat.zwave.commands.multiinstancev1.MultiInstanceCmdEncap cmd) {   
+    traceLog("multiinstancev1.MultiInstanceCmdEncap: command: ${cmd}")
+    
+    def encapsulatedCommand = cmd.encapsulatedCommand([0x31: 2])
+    debugLog( ("multiinstancev1.MultiInstanceCmdEncap: command from instance ${cmd.instance}: ${encapsulatedCommand}"))
+    if (encapsulatedCommand) {
+        return zwaveEvent(encapsulatedCommand)
+    }
+}
+def zwaveEvent(hubitat.zwave.commands.batteryv1.BatteryReport cmd) {
+    def nowTime = new Date().time
+    state.lastBatteryGet = nowTime
+    def map = [ name: "battery", unit: "%" ]
+    map.displayed = true
+    map.isStateChange = true
+    if (cmd.batteryLevel == 0xFF || cmd.batteryLevel == 0) {
+        map.value = 1
+        map.descriptionText = "battery is low!"
+    } else {
+        map.value = cmd.batteryLevel
+    }
+    map
+}
+
+
+def zwaveEvent(hubitat.zwave.commands.basicv1.BasicReport cmd) {
+	debugWarn("Zwave event received: $cmd")
+}
+
+def zwaveEvent(hubitat.zwave.Command cmd) {
+	warnLog( "Unexpected zwave command $cmd")
+}
+
+def poll() {
+    debugLog("Polling....")
+    def cmds = []
+    cmds << zwave.sensorMultilevelV1.sensorMultilevelGet() //temperature
+    cmds << zwave.thermostatSetpointV1.thermostatSetpointGet(setpointType: 1)
+    cmds << zwave.thermostatSetpointV1.thermostatSetpointGet(setpointType: 2)
+    cmds << zwave.thermostatModeV2.thermostatModeGet()
+    cmds << zwave.thermostatOperatingStateV1.thermostatOperatingStateGet()
+    cmds << zwave.switchMultilevelV3.switchMultilevelGet() //valve
+    
+    sendCommands(cmds)
+}
+
+
+def setHeatingSetpoint(degrees, delay = standardBigDelay) {
+	setHeatingSetpoint(degrees.toDouble(), delay)
+}
+
+def setHeatingSetpoint(Double degrees, Integer delay = standardBigDelay) {
+	traceLog( "setHeatingSetpoint($degrees, $delay)")
+	def deviceScale = state.scale ?: 1
+	def deviceScaleString = deviceScale == 2 ? "C" : "F"
+    def locationScale = getTemperatureScale()
+	def p = (state.precision == null) ? 1 : state.precision
+
+    def convertedDegrees
+    if (locationScale == "C" && deviceScaleString == "F") {
+    	convertedDegrees = celsiusToFahrenheit(degrees)
+    } else if (locationScale == "F" && deviceScaleString == "C") {
+    	convertedDegrees = fahrenheitToCelsius(degrees)
+    } else {
+    	convertedDegrees = degrees
+    }
+    
+    def cmds = []
+    cmds << zwave.thermostatSetpointV1.thermostatSetpointSet(setpointType: 1, scale: deviceScale, precision: p, scaledValue: convertedDegrees)
+    cmds << zwave.thermostatSetpointV1.thermostatSetpointGet(setpointType: 1)
+    
+    sendCommands(cmds,delay)
+}
+
+def modes() {
+	["off", "heat", "emergency heat"]
+}
+
+
+def getDataByName(String name) {
+	state[name] ?: device.getDataValue(name)
+}
+
+def getModeMap() { [
+	"off": 0,
+	"heat": 1,
+	"emergency heat": 15
+]}
+
+def setThermostatMode(String value) {
+    if(modeMap[value]){
+        def cmds = []
+        cmds << zwave.thermostatModeV2.thermostatModeSet(mode: modeMap[value])
+        cmds << zwave.thermostatSetpointV1.thermostatSetpointGet(setpointType: 1)
+        sendCommands(cmds)
+    }else{
+        warnLog("Mode '${value}' not supported!")
+    }
+}
+
+
+def off() {
+	delayBetween([
+		zwave.thermostatModeV2.thermostatModeSet(mode: 0).format(),
+		zwave.thermostatModeV2.thermostatModeGet().format()
+	], standardDelay)
+}
+
+def heat() {
+	delayBetween([
+		zwave.thermostatModeV2.thermostatModeSet(mode: 1).format(),
+		zwave.thermostatModeV2.thermostatModeGet().format()
+	], standardDelay)
+}
+
+def emergencyHeat() {
+    delayBetween([
+		zwave.thermostatModeV2.thermostatModeSet(mode: 15).format(),
+		zwave.thermostatModeV2.thermostatModeGet().format()
+	], standardDelay)
+}
+
+def auto() {
+	warnLog("Auto not supported")
+}
+
+
+private getStandardDelay() {
+	1000
+}
+
+private getStandardBigDelay() {
+	3000
+}
+
+
+def refresh() {
+  poll()
+}
+
+
+def debugLog(msg){
+    if(debugLogging == true){
+           log.debug "["+device.getLabel() + "] " + msg
+    }
+}
+
+def infoLog(msg){
+    if(infoLogging == true){
+           log.info "[" + device.getLabel() + "] " + msg
+    }
+}
+def warnLog(msg){
+           log.warn "[" + device.getLabel() + "] " + msg
+}
+
+def traceLog(msg){
+           log.trace "[" + device.getLabel() + "] " + msg
+}
+
+def fanAuto(){
+    warnLog("Fan not supported")
+}
+
+def fanCirculate(){
+    warnLog("Fan not supported")
+}
+
+def fanOn(){
+    warnLog("Fan not supported")
+}
+
+def setThermostatFanMode(value){
+    warnLog("Fan not supported")
+}
+
+def cool(){
+    warnLog("Cool not supported")
+}
+
+def setCoolingSetpoint(value){
+    warnLog("Cool not supported")
+}
+
+private sendCommands(cmds,delay = standardDelay) {
+    debugLog(cmds)
+    delayBetween(cmds.collect{ secure(it) }, standardDelay)
+}
+
+private secure(hubitat.zwave.Command cmd) {
+	if (state.sec) {
+        debugLog("Secured: " + cmd.format())
+		return zwave.securityV1.securityMessageEncapsulation().encapsulate(cmd).format()
+	} else {
+        debugLog("Not secured: " + cmd.format())
+		return cmd.format()
+	}
+}
+

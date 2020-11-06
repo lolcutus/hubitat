@@ -274,9 +274,7 @@ def zwaveEvent(hubitat.zwave.commands.thermostatmodev2.ThermostatModeSupportedRe
 	if(cmd.auto) { supportedModes << "auto " }
 	
 	if(supportedModes.size() == 0){
-		supportedModes << "off"
-		supportedModes << "heat"
-		supportedModes << "emergency heat"
+		supportedModes= modes()
 	}
 	map.value = supportedModes
 	map.name = "supportedThermostatModes"

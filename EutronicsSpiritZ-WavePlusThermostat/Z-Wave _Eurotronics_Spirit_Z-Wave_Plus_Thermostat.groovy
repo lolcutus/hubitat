@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.1.0003
+ *  Version v1.0.1.0004
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -49,7 +49,7 @@ preferences {
 	def map = [:]
  	map.name = "version"
 	map.isStateChanged = true
-	map.value = "v1.0.1.0003"
+	map.value = "v1.0.1.0004"
 	sendEvent(map)
  }
 
@@ -266,17 +266,18 @@ def zwaveEvent(hubitat.zwave.commands.thermostatfanmodev3.ThermostatFanModeRepor
 def zwaveEvent(hubitat.zwave.commands.thermostatmodev2.ThermostatModeSupportedReport cmd) {
 	debugLog("Received thermostatmodev2.ThermostatModeSupportedReport - ${cmd}")
 	def map = [:]
-	def supportedModes = ""
-	if(cmd.off) { supportedModes += "off " }
-	if(cmd.heat) { supportedModes += "heat " }
-	if(cmd.auxiliaryemergencyHeat) { supportedModes += "emergency heat " }
-	if(cmd.cool) { supportedModes += "cool " }
-	if(cmd.auto) { supportedModes += "auto " }
+	def supportedModes = [ 	]
+	if(cmd.off) { supportedModes << "off " }
+	if(cmd.heat) { supportedModes << "heat " }
+	if(cmd.auxiliaryemergencyHeat) { supportedModes << "emergency heat " }
+	if(cmd.cool) { supportedModes << "cool " }
+	if(cmd.auto) { supportedModes << "auto " }
 	
-	if(supportedModes == ""){
-		supportedModes = "off, heat, emergency heat"
+	if(supportedModes.size() == 0){
+		supportedModes << "off"
+		supportedModes << "heat"
+		supportedModes << "emergency heat"
 	}
-	supportedModes= "[" + supportedModes + "]"
 	map.value = supportedModes
 	map.name = "supportedThermostatModes"
 	map

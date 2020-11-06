@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.1.0001
+ *  Version v1.0.1.0003
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -45,6 +45,14 @@ preferences {
 	input "windowOpen", "enum", title: "Window Open Detection",description: "Sensitivity of Open Window Detection", options: ["Disabled", "Low", "Medium", "High" ], defaultValue: "Disabled", required: false, displayDuringSetup: false
 } 
 
+ private setVersion(){
+	def map = [:]
+ 	map.name = "version"
+	map.isStateChanged = true
+	map.value = "v1.0.1.0003"
+	sendEvent(map)
+ }
+
 def configure() {  
  	setVersion()
 	def cmds = []
@@ -62,18 +70,23 @@ def configure() {
 	cmds << zwave.configurationV1.configurationGet(parameterNumber:6)
 	cmds << zwave.configurationV1.configurationSet(configurationValue:  windowOpen == "Low" ? [0x01] : windowOpen == "Medium" ? [0x02] : windowOpen == "High" ? [0x03] : [0x00], parameterNumber:7, size:1, scaledConfigurationValue:  windowOpen == "Low" ? 0x01 : windowOpen == "Medium" ? 0x02 : windowOpen == "High" ? 0x03 : 0x00)
 	cmds << zwave.configurationV1.configurationGet(parameterNumber:7)
+	cmds << zwave.thermostatModeV2.thermostatModeSupportedGet()
 	
 	sendCommands(cmds)   
  }
  
- private setVersion(){
-	def map = [:]
- 	map.name = "version"
-	map.isStateChanged = true
-	map.value = "v1.0.1.0001"
-	sendEvent(map)
- }
-
+def poll() {
+	debugLog("Polling....")
+	def cmds = []
+	cmds << zwave.sensorMultilevelV1.sensorMultilevelGet() //temperature
+	cmds << zwave.thermostatSetpointV1.thermostatSetpointGet(setpointType: 1)
+	cmds << zwave.thermostatSetpointV1.thermostatSetpointGet(setpointType: 2)
+	cmds << zwave.thermostatModeV2.thermostatModeGet()
+	cmds << zwave.thermostatOperatingStateV1.thermostatOperatingStateGet()
+	cmds << zwave.switchMultilevelV3.switchMultilevelGet() //valve
+	
+	sendCommands(cmds)
+}
 
 def parse(String description)
 {
@@ -114,11 +127,6 @@ def zwaveEvent(hubitat.zwave.commands.switchmultilevelv3.SwitchMultilevelReport 
 	map2.isStateChanged = true
 	sendEvent(map2)
   map
-}
-
-def pollDevice() {
-	debugLog("pollDevice() - redirecting to poll()")
-	poll()
 }
 
 def zwaveEvent(hubitat.zwave.commands.configurationv2.ConfigurationReport cmd ) {
@@ -316,20 +324,6 @@ def zwaveEvent(hubitat.zwave.commands.basicv1.BasicReport cmd) {
 def zwaveEvent(hubitat.zwave.Command cmd) {
 	warnLog( "Unexpected zwave command $cmd")
 }
-
-def poll() {
-	debugLog("Polling....")
-	def cmds = []
-	cmds << zwave.sensorMultilevelV1.sensorMultilevelGet() //temperature
-	cmds << zwave.thermostatSetpointV1.thermostatSetpointGet(setpointType: 1)
-	cmds << zwave.thermostatSetpointV1.thermostatSetpointGet(setpointType: 2)
-	cmds << zwave.thermostatModeV2.thermostatModeGet()
-	cmds << zwave.thermostatOperatingStateV1.thermostatOperatingStateGet()
-	cmds << zwave.switchMultilevelV3.switchMultilevelGet() //valve
-	
-	sendCommands(cmds)
-}
-
 
 def setHeatingSetpoint(degrees, delay = standardBigDelay) {
 	setHeatingSetpoint(degrees.toDouble(), delay)

@@ -71,7 +71,7 @@ def configure() {
 	cmds << zwave.configurationV1.configurationGet(parameterNumber:7)
 	cmds << zwave.thermostatModeV2.thermostatModeSupportedGet()
 	
-	sendCommands(cmds,standardBigDelay)   
+	sendCommands(cmds)   
  }
  
 def poll() {
@@ -82,7 +82,7 @@ def poll() {
 	cmds << zwave.thermostatModeV2.thermostatModeGet()
 	cmds << zwave.switchMultilevelV3.switchMultilevelGet() //valve
 	
-	sendCommands(cmds)
+	sendCommands(cmds,standardBigDelay)
 }
 
 def parse(String description)

@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.1.0006
+ *  Version v1.0.1.0007
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -48,7 +48,7 @@ preferences {
  private setVersion(){
 	def map = [:]
  	map.name = "version"
-	map.value = "v1.0.1.0006"
+	map.value = "v1.0.1.0007"
 	sendEvent(map)
  }
 
@@ -71,7 +71,7 @@ def configure() {
 	cmds << zwave.configurationV1.configurationGet(parameterNumber:7)
 	cmds << zwave.thermostatModeV2.thermostatModeSupportedGet()
 	
-	sendCommands(cmds)   
+	sendCommands(cmds,standardBigDelay)   
  }
  
 def poll() {
@@ -110,7 +110,7 @@ def zwaveEvent(hubitat.zwave.commands.switchmultilevelv3.SwitchMultilevelReport 
 	state.valve = cmd.value
 	map.value = cmd.value
 	map.unit = "%"
-	infoLog("Valve open '${cmd.value}'%")
+	debugLog("Valve open '${cmd.value}'%")
 	def map2 = [:]
 	if(cmd.value == 0){
 		state.thermostatOperatingState = "idle"
@@ -122,6 +122,7 @@ def zwaveEvent(hubitat.zwave.commands.switchmultilevelv3.SwitchMultilevelReport 
 		infoLog( "Operating State heating")
 	}
 	map2.name = "thermostatOperatingState"
+	infoLog(map2)
 	sendEvent(map2)
   map
 }
@@ -463,7 +464,7 @@ def setCoolingSetpoint(value){
 
 private sendCommands(cmds,delay = standardDelay) {
 	debugLog(cmds)
-	delayBetween(cmds.collect{ secure(it) }, standardDelay)
+	delayBetween(cmds.collect{ secure(it) }, delay)
 }
 
 private secure(hubitat.zwave.Command cmd) {

@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.1.0005
+ *  Version v1.0.1.0006
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -48,8 +48,7 @@ preferences {
  private setVersion(){
 	def map = [:]
  	map.name = "version"
-	map.isStateChanged = true
-	map.value = "v1.0.1.0005"
+	map.value = "v1.0.1.0006"
 	sendEvent(map)
  }
 
@@ -99,7 +98,6 @@ def parse(String description)
 	debugLog("Command ${cmd}")
 	def event =zwaveEvent(cmd)
 	if(event){
-		event.isStateChange = true	   
 		sendEvent(event)
 		infoLog("Log event: ${event}")
 	}
@@ -124,7 +122,6 @@ def zwaveEvent(hubitat.zwave.commands.switchmultilevelv3.SwitchMultilevelReport 
 		infoLog( "Operating State heating")
 	}
 	map2.name = "thermostatOperatingState"
-	map2.isStateChanged = true
 	sendEvent(map2)
   map
 }
@@ -160,7 +157,6 @@ def zwaveEvent(hubitat.zwave.commands.sensormultilevelv2.SensorMultilevelReport 
 {
 	debugLog("Received sensormultilevelv2.SensorMultilevelReport - ${cmd}")
 	def map = [:]
-	map.isStateChange = true
 	if (cmd.sensorType == 1) {
 		map.value = convertTemperatureIfNeeded(cmd.scaledSensorValue, cmd.scale == 1 ? "F" : "C", cmd.precision)
 		map.unit = getTemperatureScale()
@@ -305,7 +301,6 @@ def zwaveEvent(hubitat.zwave.commands.batteryv1.BatteryReport cmd) {
 	state.lastBatteryGet = nowTime
 	def map = [ name: "battery", unit: "%" ]
 	map.displayed = true
-	map.isStateChange = true
 	if (cmd.batteryLevel == 0xFF || cmd.batteryLevel == 0) {
 		map.value = 1
 		map.descriptionText = "battery is low!"

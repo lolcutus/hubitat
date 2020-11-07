@@ -79,9 +79,7 @@ def poll() {
 	def cmds = []
 	cmds << zwave.sensorMultilevelV1.sensorMultilevelGet() //temperature
 	cmds << zwave.thermostatSetpointV1.thermostatSetpointGet(setpointType: 1)
-	cmds << zwave.thermostatSetpointV1.thermostatSetpointGet(setpointType: 2)
 	cmds << zwave.thermostatModeV2.thermostatModeGet()
-	cmds << zwave.thermostatOperatingStateV1.thermostatOperatingStateGet()
 	cmds << zwave.switchMultilevelV3.switchMultilevelGet() //valve
 	
 	sendCommands(cmds)

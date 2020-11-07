@@ -403,6 +403,11 @@ def auto() {
 	warnLog("Auto not supported")
 }
 
+def pollDevice(){
+    poll()
+}
+
+
 
 private getStandardDelay() {
 	1000

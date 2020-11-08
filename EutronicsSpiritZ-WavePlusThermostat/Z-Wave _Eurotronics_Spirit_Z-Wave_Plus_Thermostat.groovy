@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.1.0007
+ *  Version v1.0.1.0008
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -48,7 +48,7 @@ preferences {
  private setVersion(){
 	def map = [:]
  	map.name = "version"
-	map.value = "v1.0.1.0007"
+	map.value = "v1.0.1.0008"
 	sendEvent(map)
  }
 
@@ -299,6 +299,7 @@ def zwaveEvent(hubitat.zwave.commands.batteryv1.BatteryReport cmd) {
 	def nowTime = new Date().time
 	state.lastBatteryGet = nowTime
 	def map = [ name: "battery", unit: "%" ]
+	isStateChanged = true
 	map.displayed = true
 	if (cmd.batteryLevel == 0xFF || cmd.batteryLevel == 0) {
 		map.value = 1
@@ -306,7 +307,7 @@ def zwaveEvent(hubitat.zwave.commands.batteryv1.BatteryReport cmd) {
 	} else {
 		map.value = cmd.batteryLevel
 	}
-	map
+	map.isStateChanged = true
 }
 
 

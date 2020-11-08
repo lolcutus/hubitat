@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.1.0008
+ *  Version v1.0.1.0009
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -48,7 +48,7 @@ preferences {
  private setVersion(){
 	def map = [:]
  	map.name = "version"
-	map.value = "v1.0.1.0008"
+	map.value = "v1.0.1.0009"
 	sendEvent(map)
  }
 
@@ -70,6 +70,7 @@ def configure() {
 	cmds << zwave.configurationV1.configurationSet(configurationValue:  windowOpen == "Low" ? [0x01] : windowOpen == "Medium" ? [0x02] : windowOpen == "High" ? [0x03] : [0x00], parameterNumber:7, size:1, scaledConfigurationValue:  windowOpen == "Low" ? 0x01 : windowOpen == "Medium" ? 0x02 : windowOpen == "High" ? 0x03 : 0x00)
 	cmds << zwave.configurationV1.configurationGet(parameterNumber:7)
 	cmds << zwave.thermostatModeV2.thermostatModeSupportedGet()
+	cmds << zwave.batteryV1.batteryGet()
 	
 	sendCommands(cmds)   
  }
@@ -87,7 +88,7 @@ def poll() {
 
 def parse(String description)
 {
-	debugLog("Parsing_1 '${description}'")
+	debugLog("Parsing '${description}'")
 	def cmd = zwave.parse(description, [0x42:1, 0x43:2, 0x31: 3])
 	if(!cmd){
 		warnLog("Non-parsed event: ${description}")
@@ -308,6 +309,7 @@ def zwaveEvent(hubitat.zwave.commands.batteryv1.BatteryReport cmd) {
 		map.value = cmd.batteryLevel
 	}
 	map.isStateChanged = true
+	map
 }
 
 

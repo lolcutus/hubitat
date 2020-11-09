@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v0.0.1.0000
+ *  Version v0.0.1.0001
  
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -36,7 +36,7 @@ metadata {
 private setVersion(){
 	def map = [:]
  	map.name = "version"
-	map.value = "v0.0.1.0000"
+	map.value = "v0.0.1.0001"
 	debugLog(map)
 	sendEvent(map)
  }
@@ -54,19 +54,19 @@ def parse(String description) {
 		return [:]
 	}
 	def cluster = msgMap["cluster"]
-	debugLog("cluster: "+cluster)
+	//debugLog("cluster: "+cluster)
 	def attrId = msgMap["attrId"]
-	debugLog("attrId: "+attrId)
+	//debugLog("attrId: "+attrId)
 	def encoding = Integer.parseInt(msgMap["encoding"],16)
-	debugLog("encoding: "+encoding)
+	//debugLog("encoding: "+encoding)
 	def valueHex = msgMap["value"]
-	debugLog("valueHex: "+valueHex)
+	//debugLog("valueHex: "+valueHex)
 	Map map = [:]
-	if (cluster == "0000"){
+	if (cluster == "0000" && attrId == "0005"){
 		map.model = valueHex
 		updateDataValue('model', valueHex)           
 	}
-
+	infoLog(map)
   	return map
 }
 

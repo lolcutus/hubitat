@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.1.0002
+ *  Version v1.0.2.0000
  
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -20,7 +20,9 @@ metadata {
 		capability "Configuration"
 		capability "Contact Sensor"
 		
-		attribute "batteryLastReplaced", "String"
+		command "resetBatteryReplacedDate"
+		
+		attribute "batteryLastReplaced", "Date"
 		attribute "lastUnknownMsg", "String"
 	
 		fingerprint endpointId: "01", profileId: "0104", deviceId: "5F01", inClusters: "0000,0003,FFFF,0006", outClusters: "0000,0004,FFFF", manufacturer: "Lumi", model: "lumi.sensor_magnet.aq2"
@@ -35,15 +37,18 @@ metadata {
 private setVersion(){
 	def map = [:]
  	map.name = "driver"
-	map.value = "v1.0.1.0002"
+	map.value = "v1.0.2.0000"
 	debugLog(map)
 	updateDataValue(map.name,map.value)
 	state.remove("prefsSetCount")
     removeDataValue("application")
  }
- def configure() {  
-    setVersion()
-    state.comment = "Works with model MCCGQ11LM"
+def configure() {  
+	setVersion()
+	state.comment = "Works with model MCCGQ11LM"
+	if(batteryLastReplaced == null){
+		 resetBatteryReplacedDate()
+	}
  }
 
 	
@@ -128,31 +133,9 @@ private parseBattery(value) {
 	
 	
 }
-private parseBattery2(value) {
-    def batteryVoltajeFirstIndex = 7 
-    def batteryVoltajeSecondIndex = 5
-    
-    def bateryVoltaje = value[batteryVoltajeFirstIndex .. (batteryVoltajeFirstIndex+1)] + value[batteryVoltajeSecondIndex .. (batteryVoltajeSecondIndex+1)]
-    
-    
-	displayDebugLog("Battery voltaje = ${bateryVoltaje}")
-	def MsgLength = description.size()
-	
-	def rawVolts = rawValue / 1000
-	def minVolts = voltsmin ? voltsmin : 2.5
-	def maxVolts = voltsmax ? voltsmax : 3.0
-	def pct = (rawVolts - minVolts) / (maxVolts - minVolts)
-	def roundedPct = Math.min(100, Math.round(pct * 100))
-	def descText = "Battery level is ${roundedPct}% (${rawVolts} Volts)"
-	displayInfoLog(descText)
-	def result = [
-		name: 'battery',
-		value: roundedPct,
-		unit: "%",
-		isStateChange: true,
-		descriptionText: descText
-	]
-	return result
+
+private resetBatteryReplacedDate() {
+	sendEvent(name: "batteryLastReplaced", value: new Date())
 }
 
 def debugLog(msg){

@@ -19,7 +19,9 @@ metadata {
 		capability "Battery"
 		capability "Configuration"
 		
-		attribute "batteryLastReplaced", "String"
+		command "resetBatteryReplacedDate"
+		
+		attribute "batteryLastReplaced", "Date"
 		attribute "lastUnknownMsg", "String"
 
 		fingerprint endpointId: "01", profileId: "0104", deviceId: "0104", inClusters: "0000,0003,FFFF,0019", outClusters: "0000,0004,0003,0006,0008,0005,0019", manufacturer: "LUMI", model: "lumi.sensor_magnet"
@@ -42,6 +44,9 @@ private setVersion(){
  }
  def configure() {  
  	setVersion()
+ 	if(batteryLastReplaced == null){
+		 resetBatteryReplacedDate()
+	}
  }
 
 	
@@ -79,6 +84,10 @@ def parse(String description) {
 	}
 	infoLog(map)
    	return map
+}
+
+private resetBatteryReplacedDate() {
+	sendEvent(name: "batteryLastReplaced", value: new Date())
 }
 
 def debugLog(msg){

@@ -23,7 +23,10 @@ metadata {
 		capability "Sensor"
 		capability "Refresh"
 		capability "Battery"
-	
+		
+		command "resetBatteryReplacedDate"
+		
+		attribute "batteryLastReplaced", "Date"
 		attribute "valve", "String"
 		
 		fingerprint deviceId: "0x01"
@@ -53,6 +56,9 @@ preferences {
 
 def configure() {  
  	setVersion()
+ 	if(batteryLastReplaced == null){
+		 resetBatteryReplacedDate()
+	}
 	def cmds = []
 	cmds << zwave.configurationV1.configurationSet(configurationValue:  LCDinvert == "Yes" ? [0x01] : [0x00], parameterNumber:1, size:1, scaledConfigurationValue:  LCDinvert == "Yes" ? 0x01 : 0x00)
 	cmds << zwave.configurationV1.configurationGet(parameterNumber:1)
@@ -71,7 +77,7 @@ def configure() {
 	cmds << zwave.thermostatModeV2.thermostatModeSupportedGet()
 	cmds << zwave.batteryV1.batteryGet()
 	
-	sendCommands(cmds)   
+	sendCommands(cmds,standardBigDelay)   
  }
  
 def poll() {
@@ -99,6 +105,10 @@ def parse(String description)
 		sendEvent(event)
 		infoLog("Log event: ${event}")
 	}
+}
+
+private resetBatteryReplacedDate() {
+	sendEvent(name: "batteryLastReplaced", value: new Date())
 }
 
 def zwaveEvent(hubitat.zwave.commands.switchmultilevelv3.SwitchMultilevelReport cmd){

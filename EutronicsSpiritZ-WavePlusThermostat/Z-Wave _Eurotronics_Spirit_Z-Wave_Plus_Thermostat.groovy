@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.1.0010
+ *  Version v1.0.1.0011
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -25,8 +25,7 @@ metadata {
 		capability "Battery"
 	
 		attribute "valve", "String"
-		attribute "version", "String"
-	
+		
 		fingerprint deviceId: "0x01"
 		fingerprint manufacturerId: "328"
 		fingerprint inClusters: "0x5E,0x85,0x59,0x86,0x72,0x5A,0x75,0x31,0x26,0x40,0x43,0x80,0x70,0x71,0x73,0x98,0x9F,0x55,0x6C,0x7A"
@@ -47,9 +46,9 @@ preferences {
 
  private setVersion(){
 	def map = [:]
- 	map.name = "version"
-	map.value = "v1.0.1.0010"
-	sendEvent(map)
+ 	map.name = "driver"
+	map.value = "v1.0.1.0011"
+	updateDataValue(map.name,map.value)
  }
 
 def configure() {  

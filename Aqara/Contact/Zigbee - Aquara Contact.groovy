@@ -38,7 +38,7 @@ private setVersion(){
  	map.name = "driver"
 	map.value = "v1.0.1.0001"
 	debugLog(map)
-	updateDataValue(map)
+	updateDataValue(map.name,map.value)
  }
  def configure() {  
     setVersion()
@@ -65,11 +65,13 @@ def parse(String description) {
 	debugLog("Command: ${command}")
 	switch(command) {
 		case MODEL:
-			map.model = valueHex
-			updateDataValue("model", valueHex)
-			if(valueHex == "lumi.sensor_magnet.aq2"){
-				updateDataValue("manufacturer", valueHex)
+			map.name = "model"
+			map.value = valueHex
+			updateDataValue(map.name, map.value)
+			if(map.value == "lumi.sensor_magnet.aq2"){
+				updateDataValue("manufacturer", "Lumi")
 			}
+            setVersion()
 			break
 		case CONTACT:
 			map = parseContact(Integer.parseInt(valueHex))

@@ -19,7 +19,6 @@ metadata {
 		capability "Battery"
 		capability "Configuration"
 		
-		attribute "version", "String"
 		attribute "batteryLastReplaced", "String"
 		attribute "lastUnknownMsg", "String"
 		attribute "lastCheckin", "String"
@@ -37,10 +36,10 @@ metadata {
 
 private setVersion(){
 	def map = [:]
- 	map.name = "version"
+ 	map.name = "driver"
 	map.value = "v0.0.1.0001"
 	debugLog(map)
-	sendEvent(map)
+	updateDataValue(map)
  }
  def configure() {  
  	setVersion()

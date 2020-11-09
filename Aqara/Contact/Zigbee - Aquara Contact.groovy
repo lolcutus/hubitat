@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.1.0000
+ *  Version v1.0.1.0001
  
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -20,10 +20,9 @@ metadata {
 		capability "Configuration"
 		capability "Contact Sensor"
 		
-		attribute "version", "String"
 		attribute "batteryLastReplaced", "String"
 		attribute "lastUnknownMsg", "String"
-		attribute "lastCheckin", "String"
+		attribute "lastCheckin", "Date"
 
 		fingerprint endpointId: "01", profileId: "0104", deviceId: "5F01", inClusters: "0000,0003,FFFF,0006", outClusters: "0000,0004,FFFF", manufacturer: "LUMI", model: "lumi.sensor_magnet.aq2"
 	}
@@ -36,10 +35,10 @@ metadata {
 
 private setVersion(){
 	def map = [:]
- 	map.name = "version"
-	map.value = "v1.0.1.0000"
+ 	map.name = "driver"
+	map.value = "v1.0.1.0001"
 	debugLog(map)
-	sendEvent(map)
+	updateDataValue(map)
  }
  def configure() {  
     setVersion()
@@ -49,7 +48,7 @@ private setVersion(){
 // Parse incoming device messages to generate events
 def parse(String description) {
     //init
-    sendEvent(name: "lastCheckin", value: new Date().format('yyyy.MM.dd HH:mm:ss'))
+    sendEvent(name: "lastCheckin", value: new Date())
     def MODEL = "0000_0005"
     def CONTACT = "0006_0000"
     def BATTERY01 = "0000_FF01"
@@ -67,7 +66,10 @@ def parse(String description) {
 	switch(command) {
 		case MODEL:
 			map.model = valueHex
-			updateDataValue('model', valueHex)
+			updateDataValue("model", valueHex)
+			if(valueHex == "lumi.sensor_magnet.aq2"){
+				updateDataValue("manufacturer", valueHex)
+			}
 			break
 		case CONTACT:
 			map = parseContact(Integer.parseInt(valueHex))

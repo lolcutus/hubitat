@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.1.0009
+ *  Version v1.0.1.0010
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -48,7 +48,7 @@ preferences {
  private setVersion(){
 	def map = [:]
  	map.name = "version"
-	map.value = "v1.0.1.0009"
+	map.value = "v1.0.1.0010"
 	sendEvent(map)
  }
 
@@ -106,17 +106,14 @@ def zwaveEvent(hubitat.zwave.commands.switchmultilevelv3.SwitchMultilevelReport 
 	debugLog("Received switchmultilevelv3.SwitchMultilevelReport - ${cmd}")
 	def map = [:]
 	map.name = "valve"
-	state.valve = cmd.value
 	map.value = cmd.value
 	map.unit = "%"
 	debugLog("Valve open '${cmd.value}'%")
 	def map2 = [:]
 	if(cmd.value == 0){
-		state.thermostatOperatingState = "idle"
 		map2.value = "idle" 
 		infoLog( "Operating State to idle")
 	}else{
-		state.thermostatOperatingState = "heating"
 		map2.value = "heating" 
 		infoLog( "Operating State heating")
 	}
@@ -147,9 +144,6 @@ def zwaveEvent(hubitat.zwave.commands.thermostatsetpointv2.ThermostatSetpointRep
 		default:
 			return [:]
 	}
-	state.size = cmd.size
-	state.scale = cmd.scale
-	state.precision = cmd.precision
 	map
 }
 
@@ -283,10 +277,8 @@ def zwaveEvent(hubitat.zwave.commands.thermostatfanmodev3.ThermostatFanModeSuppo
 	if(cmd.auto) { supportedFanModes += "fanAuto " }
 	if(cmd.low) { supportedFanModes += "fanOn " }
 	if(cmd.circulation) { supportedFanModes += "fanCirculate " }
-
-	state.supportedFanModes = supportedFanModes
-	
 }
+
 def zwaveEvent(hubitat.zwave.commands.multiinstancev1.MultiInstanceCmdEncap cmd) {   
 	traceLog("multiinstancev1.MultiInstanceCmdEncap: command: ${cmd}")
 	
@@ -298,7 +290,6 @@ def zwaveEvent(hubitat.zwave.commands.multiinstancev1.MultiInstanceCmdEncap cmd)
 }
 def zwaveEvent(hubitat.zwave.commands.batteryv1.BatteryReport cmd) {
 	def nowTime = new Date().time
-	state.lastBatteryGet = nowTime
 	def map = [ name: "battery", unit: "%" ]
 	isStateChanged = true
 	map.displayed = true
@@ -327,10 +318,10 @@ def setHeatingSetpoint(degrees, delay = standardBigDelay) {
 
 def setHeatingSetpoint(Double degrees, Integer delay = standardBigDelay) {
 	traceLog( "setHeatingSetpoint($degrees, $delay)")
-	def deviceScale = state.scale ?: 1
+	def deviceScale =  1
 	def deviceScaleString = deviceScale == 2 ? "C" : "F"
 	def locationScale = getTemperatureScale()
-	def p = (state.precision == null) ? 1 : state.precision
+	def p = 1
 
 	def convertedDegrees
 	if (locationScale == "C" && deviceScaleString == "F") {
@@ -350,11 +341,6 @@ def setHeatingSetpoint(Double degrees, Integer delay = standardBigDelay) {
 
 def modes() {
 	["off", "heat", "emergency heat"]
-}
-
-
-def getDataByName(String name) {
-	state[name] ?: device.getDataValue(name)
 }
 
 def getModeMap() { [

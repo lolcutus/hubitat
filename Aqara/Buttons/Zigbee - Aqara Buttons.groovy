@@ -15,7 +15,7 @@
  */
 
 metadata {
-	definition (name: "Zigbee - Aqara Buttons", namespace: "lolcutus", author: "lolcutus") {
+	definition (name: "Zigbee - Aqara Buttons", namespace: "lolcutus", author: "lolcutus", importUrl: "https://raw.githubusercontent.com/lolcutus/hubitat/master/Aqara/Buttons/Zigbee%20-%20Aquara%20Buttons.groovy") {
 		capability "Battery"
 		capability "Configuration"
 		capability "DoubleTapableButton"
@@ -27,7 +27,7 @@ metadata {
 		attribute "batteryLastReplaced", "Date"
 		attribute "lastUnknownMsg", "String"
 
-		fingerprint profileId: "0104", inClusters: "0000,0003,0019,FFFF,0012", outClusters: "0000,0004,0003,0005,0019,FFFF,0012", manufacturer: "LUMI", model: "lumi.remote.b1acn01", deviceJoinName: "Aqara Wireless Switch", importUrl: "https://raw.githubusercontent.com/lolcutus/hubitat/master/Aqara/Buttons/Zigbee%20-%20Aquara%20Buttons.groovy"
+		fingerprint profileId: "0104", inClusters: "0000,0003,0019,FFFF,0012", outClusters: "0000,0004,0003,0005,0019,FFFF,0012", manufacturer: "LUMI", model: "lumi.remote.b1acn01"
 	}
 
 	preferences {

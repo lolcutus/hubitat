@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.0.0002
+ *  Version v1.0.1.0000
  
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -15,7 +15,7 @@
  */
 
 metadata {
-	definition (name: "Zigbee - Aqara Contact", namespace: "lolcutus", author: "lolcutus") {
+	definition (name: "Zigbee - Aqara Contact", namespace: "lolcutus", author: "lolcutus", importUrl: "https://raw.githubusercontent.com/lolcutus/hubitat/master/Aqara/Contact/Zigbee%20-%20Aquara%20Contact.groovy") {
 		capability "Battery"
 		capability "Configuration"
 		
@@ -35,7 +35,7 @@ metadata {
 private setVersion(){
 	def map = [:]
  	map.name = "version"
-	map.value = "v1.0.0.0002"
+	map.value = "v1.0.1.0000"
 	debugLog(map)
 	sendEvent(map)
  }

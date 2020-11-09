@@ -21,6 +21,7 @@ metadata {
 		
 		attribute "version", "String"
 		attribute "batteryLastReplaced", "String"
+		attribute "lastUnknownMsg", "String"
 
 		fingerprint endpointId: "01", profileId: "0104", deviceId: "0104", inClusters: "0000,0003,FFFF,0019", outClusters: "0000,0004,0003,0006,0008,0005,0019", manufacturer: "LUMI", model: "lumi.sensor_magnet"
 
@@ -47,6 +48,10 @@ private setVersion(){
 	
 // Parse incoming device messages to generate events
 def parse(String description) {
+	//init
+	def MODEL = "0000_0005"
+	// init end
+	
 	debugLog("Parsing ${description}")
 	def  msgMap = zigbee.parseDescriptionAsMap(description)
 	debugLog(msgMap)
@@ -54,37 +59,42 @@ def parse(String description) {
 		return [:]
 	}
 	def cluster = msgMap["cluster"]
-	//debugLog("cluster: "+cluster)
 	def attrId = msgMap["attrId"]
-	//debugLog("attrId: "+attrId)
 	def encoding = Integer.parseInt(msgMap["encoding"],16)
-	//debugLog("encoding: "+encoding)
 	def valueHex = msgMap["value"]
-	//debugLog("valueHex: "+valueHex)
 	Map map = [:]
-	if (cluster == "0000" && attrId == "0005"){
-		map.model = valueHex
-		updateDataValue('model', valueHex)           
+	
+	def command = msgMap["cluster"] + '_' + msgMap["attrId"]
+	debugLog("Command: ${command}")
+	switch(command) {
+		case MODEL:
+			map.model = valueHex
+			updateDataValue('model', valueHex)
+			break
+		default:
+			map.name = "lastUnknownMsg"
+			map.value = msgMap
+			warnLog("Message not procesed: ${msgMap}")
 	}
 	infoLog(map)
-  	return map
+   	return map
 }
 
 def debugLog(msg){
 	if(debugLogging == true){
-		   log.debug "["+device.getLabel() + "] " + msg
+		log.debug "["+device.getLabel() + "] " + msg
 	}
 }
 
 def infoLog(msg){
 	if(infoLogging == true){
-		   log.info "[" + device.getLabel() + "] " + msg
+		log.info "[" + device.getLabel() + "] " + msg
 	}
 }
 def warnLog(msg){
-		   log.warn "[" + device.getLabel() + "] " + msg
+	log.warn "[" + device.getLabel() + "] " + msg
 }
 
 def traceLog(msg){
-		   log.trace "[" + device.getLabel() + "] " + msg
+	log.trace "[" + device.getLabel() + "] " + msg
 }

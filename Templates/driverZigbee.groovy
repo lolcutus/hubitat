@@ -22,6 +22,7 @@ metadata {
 		attribute "version", "String"
 		attribute "batteryLastReplaced", "String"
 		attribute "lastUnknownMsg", "String"
+		attribute "lastCheckin", "String"
 
 		fingerprint endpointId: "01", profileId: "0104", deviceId: "0104", inClusters: "0000,0003,FFFF,0019", outClusters: "0000,0004,0003,0006,0008,0005,0019", manufacturer: "LUMI", model: "lumi.sensor_magnet"
 
@@ -49,6 +50,7 @@ private setVersion(){
 // Parse incoming device messages to generate events
 def parse(String description) {
 	//init
+	sendEvent(name: "lastCheckin", value: new Date().format('yyyy.MM.dd HH:mm:ss'))
 	def MODEL = "0000_0005"
 	// init end
 	

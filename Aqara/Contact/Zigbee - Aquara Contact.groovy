@@ -18,10 +18,12 @@ metadata {
 	definition (name: "Zigbee - Aqara Contact", namespace: "lolcutus", author: "lolcutus", importUrl: "https://raw.githubusercontent.com/lolcutus/hubitat/master/Aqara/Contact/Zigbee%20-%20Aquara%20Contact.groovy") {
 		capability "Battery"
 		capability "Configuration"
+		capability "Contact Sensor"
 		
 		attribute "version", "String"
 		attribute "batteryLastReplaced", "String"
 		attribute "lastUnknownMsg", "String"
+		attribute "lastCheckin", "String"
 
 		fingerprint endpointId: "01", profileId: "0104", deviceId: "5F01", inClusters: "0000,0003,FFFF,0006", outClusters: "0000,0004,FFFF", manufacturer: "LUMI", model: "lumi.sensor_magnet.aq2"
 	}
@@ -47,6 +49,7 @@ private setVersion(){
 // Parse incoming device messages to generate events
 def parse(String description) {
     //init
+    sendEvent(name: "lastCheckin", value: new Date().format('yyyy.MM.dd HH:mm:ss'))
     def MODEL = "0000_0005"
     def CONTACT = "0006_0000"
     def BATTERY01 = "0000_FF01"

@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.0.0000
+ *  Version v1.0.0.0001
  
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -39,7 +39,7 @@ metadata {
 private setVersion(){
 	def map = [:]
  	map.name = "driver"
-	map.value = "v1.0.0.0000"
+	map.value = "v1.0.0.0001"
 	debugLog(map)
 	updateDataValue(map.name,map.value)
  }
@@ -48,6 +48,10 @@ private setVersion(){
  	if(batteryLastReplaced == null){
 		 resetBatteryReplacedDate()
 	}
+     state.remove("prefsSetCount")
+     state.remove("forcedMinutes")
+     state.remove("numOfButtons")
+     removeDataValue("application")
  }
 
 	
@@ -56,6 +60,7 @@ def parse(String description) {
 	//init
 	def MODEL = "0000_0005"
 	def BATTERY01 = "0000_FF01"
+    def BUTTON01 = "0012_0055"
 	// init end
 	
 	debugLog("Parsing ${description}")
@@ -74,14 +79,14 @@ def parse(String description) {
 	debugLog("Command: ${command}")
 	switch(command) {
 		case MODEL:
-			map.name = "model"
-			map.value = valueHex
 			updateDataValue(map.name, map.value)
 			if(map.value == "lumi.remote.b1acn01"){
 				updateDataValue("manufacturer", "Lumi")
 				updateDataValue("modelName", "Aqara Wireless Mini Switch")
 				updateDataValue("modelCode", "WXKG11LM")
 				updateDataValue("physicalButtons", "1")
+                map.name = "numberOfButtons"
+			    map.value = 1
 			}
 			setVersion()
 			break
@@ -92,6 +97,8 @@ def parse(String description) {
 			debugLog("After change encoding: "+ msgMap)  
 			map = parseBattery(msgMap["value"])
 			break
+        case BUTTON01:
+            break
 		default:
 			map.name = "lastUnknownMsg"
 			map.value = msgMap
@@ -99,6 +106,22 @@ def parse(String description) {
 	}
 	infoLog(map)
    	return map
+}
+
+private parseButtonMessage(buttonNum, pressType) {
+	def whichButton = [1: (state.numOfButtons == 1) ? "Button" : "Left button", 2: "Right button", 3: "Both buttons"]
+	def messageType = ["held", "pressed", "double-tapped"]
+	def eventType = ["held", "pushed", "doubleTapped"]
+	def timeStampType = ["Held", "Pressed", "DoubleTapped"]
+	def descText = "${whichButton[buttonNum]} was ${messageType[pressType]} (Button $buttonNum ${eventType[pressType]})"
+	displayInfoLog(descText)
+	updateDateTimeStamp(timeStampType[pressType])
+	return [
+		name: eventType[pressType],
+		value: buttonNum,
+		isStateChange: true,
+		descriptionText: descText
+	]
 }
 
 private parseBattery(value) {

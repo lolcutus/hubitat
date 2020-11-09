@@ -15,7 +15,7 @@
  */
 
 metadata {
-	definition (name: "Zigbee - Aqara Buttons", namespace: "lolcutus", author: "lolcutus", importUrl: "https://raw.githubusercontent.com/lolcutus/hubitat/master/Aqara/Buttons/Zigbee%20-%20Aquara%20Buttons.groovy") {
+	definition (name: "Zigbee - Aqara Buttons", namespace: "lolcutus", author: "lolcutus", importUrl: "https://raw.githubusercontent.com/lolcutus/hubitat/master/Aqara/Buttons/Zigbee%20-%20Aqara%20Buttons.groovy") {
 		capability "Battery"
 		capability "Configuration"
 		capability "DoubleTapableButton"
@@ -55,6 +55,7 @@ private setVersion(){
 def parse(String description) {
 	//init
 	def MODEL = "0000_0005"
+	def BATTERY01 = "0000_FF01"
 	// init end
 	
 	debugLog("Parsing ${description}")
@@ -80,9 +81,16 @@ def parse(String description) {
 				updateDataValue("manufacturer", "Lumi")
 				updateDataValue("modelName", "Aqara Wireless Mini Switch")
 				updateDataValue("modelCode", "WXKG11LM")
-				updateDataValue("nrOfButtons", "1")
+				updateDataValue("physicalButtons", "1")
 			}
 			setVersion()
+			break
+		case BATTERY01:
+			if(msgMap["encoding"] == "42") {
+				msgMap = zigbee.parseDescriptionAsMap(description.replace('encoding: 42', 'encoding: 41'))
+			}
+			debugLog("After change encoding: "+ msgMap)  
+			map = parseBattery(msgMap["value"])
 			break
 		default:
 			map.name = "lastUnknownMsg"
@@ -91,6 +99,29 @@ def parse(String description) {
 	}
 	infoLog(map)
    	return map
+}
+
+private parseBattery(value) {
+    def batteryVoltajeFirstIndex = 6 
+    def batteryVoltajeSecondIndex = 5
+    
+    def batteryVoltaje = value[batteryVoltajeFirstIndex .. (batteryVoltajeFirstIndex+1)] + value[batteryVoltajeSecondIndex .. (batteryVoltajeSecondIndex+1)]
+    def rawVolts = Integer.parseInt(batteryVoltaje,16)/1000
+    
+    def minVolts = 2.5
+	def maxVolts = 3.0
+	def pct = (rawVolts - minVolts) / (maxVolts - minVolts)
+	def roundedPct = Math.min(100, Math.round(pct * 100))
+	def descText = "Battery level is ${roundedPct}% (${rawVolts} Volts)"
+	
+    def map = [:]
+    map.name = "battery"
+	map.value= roundedPct
+	map.unit = "%"
+	map.descriptionText = descText
+	map
+	
+	
 }
 
 private resetBatteryReplacedDate() {

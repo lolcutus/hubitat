@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.1.0011
+ *  Version v1.0.1.0012
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -50,7 +50,7 @@ preferences {
  private setVersion(){
 	def map = [:]
  	map.name = "driver"
-	map.value = "v1.0.1.0011"
+	map.value = "v1.0.1.0012"
 	updateDataValue(map.name,map.value)
  }
 
@@ -121,10 +121,8 @@ def zwaveEvent(hubitat.zwave.commands.switchmultilevelv3.SwitchMultilevelReport 
 	def map2 = [:]
 	if(cmd.value == 0){
 		map2.value = "idle" 
-		infoLog( "Operating State to idle")
 	}else{
 		map2.value = "heating" 
-		infoLog( "Operating State heating")
 	}
 	map2.name = "thermostatOperatingState"
 	infoLog(map2)

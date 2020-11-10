@@ -21,6 +21,7 @@ metadata {
 		capability "DoubleTapableButton"
 		capability "HoldableButton"
 		capability "PushableButton"
+        capability "ReleasableButton"
 		
 		command "resetBatteryReplacedDate"
 		
@@ -29,6 +30,7 @@ metadata {
 
 		fingerprint endpointId : "01", profileId: "0104", deviceId: "059D", inClusters: "0000,0012,0003", outClusters: "0000", manufacturer: "LUMI", model: "lumi.remote.b1acn01", aplication:"02"
         fingerprint endpointId : "01", profileId: "0104", deviceId: "01A1", inClusters: "0000,0003,0019,FFFF,0012", outClusters: "0000,0004,0003,0005,0019,FFFF,0012", manufacturer: "LUMI", model: "lumi.remote.b186acn01", aplication:"09"
+        fingerprint endpointId : "01", profileId: "0104", deviceId: "01A1", inClusters: "0000,0003,0019,FFFF,0012", outClusters: "0000,0004,0003,0005,0019,FFFF,0012", manufacturer: "LUMI", model: "lumi.remote.b286acn01", aplication:"09"
 	}
 
 	preferences {
@@ -65,9 +67,15 @@ def parse(String description) {
     def BUTTON01 = "0012_0055"
     def NOTKNOWN = "0000_FFF0"
 	// init end
-	
 	debugLog("Parsing ${description}")
-	def  msgMap = zigbee.parseDescriptionAsMap(description)
+    def  msgMap
+    if(description.indexOf('attrId: FF01, encoding: 42') >= 0) {
+        msgMap = zigbee.parseDescriptionAsMap(description.replace('encoding: 42', 'encoding: F2'))
+        msgMap["encoding"] = "41"
+    }else{
+        msgMap = zigbee.parseDescriptionAsMap(description)
+    }
+	
 	debugLog(msgMap)
 	if(!msgMap.containsKey("cluster")){
 		return [:]
@@ -86,13 +94,10 @@ def parse(String description) {
 			setVersion()
 			break
 		case BATTERY01:
-			if(msgMap["encoding"] == "42") {
-				msgMap = zigbee.parseDescriptionAsMap(description.replace('encoding: 42', 'encoding: 41'))
-			}
-			debugLog("After change encoding: "+ msgMap)  
 			map = parseBattery(msgMap["value"])
 			break
         case BUTTON01:
+            map = parseButtonMessage(msgMap)
             break
         case NOTKNOWN:
             warnLog("Not knowing what to do with ${msgMap}")
@@ -117,10 +122,15 @@ private setDataForModels(){
         model =  "lumi.remote.b186acn01"
 		updateDataValue("model", model)
     }
+    if(model.length() > "lumi.remote.b286acn01".length() && model.startsWith("lumi.remote.b286acn01")){
+        model =  "lumi.remote.b286acn01"
+		updateDataValue("model", model)
+    }
+    state.comment = "Works with model WXKG11LM, WXKG03LM, WXKG02LM"
     debugLog("Model '${model}'")
     switch(model){
 	    case "lumi.remote.b1acn01":
-            debugLog("Configure1 ${model}")
+            debugLog("Configure ${model}")
             if(getDataValue("manufacturer") == null){
 			    updateDataValue("manufacturer", "Lumi")
 		    }
@@ -131,44 +141,80 @@ private setDataForModels(){
 		    map.value = 1
             break
         case "lumi.remote.b186acn01":
-            debugLog("Configure2 ${model}")
+            debugLog("Configure ${model}")
 		    if(getDataValue("manufacturer") == null){
 			    updateDataValue("manufacturer", "Lumi")
 		    }
-	        updateDataValue("modelName", "Aqara Wireless Switch")
+	        updateDataValue("modelName", "Aqara 1-button Light Switch (WXKG03LM - 2018)")
 	        updateDataValue("modelCode", "WXKG03LM")
 		    updateDataValue("physicalButtons", "1")
             map.name = "numberOfButtons"
 		    map.value = 1
+            break
+        case "lumi.remote.b286acn01":
+            debugLog("Configure ${model}")
+		    if(getDataValue("manufacturer") == null){
+			    updateDataValue("manufacturer", "Lumi")
+		    }
+	        updateDataValue("modelName", "Aqara 2-button Light Switch (WXKG02LM - 2018)")
+	        updateDataValue("modelCode", "WXKG02LM")
+		    updateDataValue("physicalButtons", "3")
+            map.name = "numberOfButtons"
+		    map.value = 3
             break
 	}
     map
     
 }
 
-private parseButtonMessage(buttonNum, pressType) {
-	def whichButton = [1: (state.numOfButtons == 1) ? "Button" : "Left button", 2: "Right button", 3: "Both buttons"]
-	def messageType = ["held", "pressed", "double-tapped"]
-	def eventType = ["held", "pushed", "doubleTapped"]
-	def timeStampType = ["Held", "Pressed", "DoubleTapped"]
-	def descText = "${whichButton[buttonNum]} was ${messageType[pressType]} (Button $buttonNum ${eventType[pressType]})"
-	displayInfoLog(descText)
-	updateDateTimeStamp(timeStampType[pressType])
-	return [
-		name: eventType[pressType],
-		value: buttonNum,
-		isStateChange: true,
-		descriptionText: descText
-	]
+private parseButtonMessage(msgMap) {
+    
+    def buttonNum =  Integer.parseInt(msgMap.endpoint)
+    debugLog("Button ${buttonNum}")
+    def existingButtons = getDataValue("physicalButtons")
+    if(buttonNum > existingButtons ){
+        warnLog("Unexpected button. this model has ${existingButtons} buttons but pressed was ${buttonNum}.")
+        return []
+    }
+    def eventType = Integer.parseInt(msgMap.value[2..3],16)
+	debugLog("EventType ${eventType}")
+    
+    def map = [:]
+    switch (eventType){
+        case 1:
+            map.name ="pushed" 
+            break
+        case 0:
+        map.name ="held" 
+            break
+        case 2:
+            map.name ="doubleTapped" 
+            break
+        case 255:
+        map.name ="released" 
+            break
+        
+    }
+    map.value = buttonNum
+    map
 }
 
 private parseBattery(value) {
-    def batteryVoltajeFirstIndex = 6 
-    def batteryVoltajeSecondIndex = 5
-    
+    def batteryVoltajeFirstIndex
+    def batteryVoltajeSecondIndex
+    def model = getDataValue("model");
+    switch(model){
+	    case "lumi.remote.b1acn01":
+        case "lumi.remote.b186acn01":
+        case "lumi.remote.b286acn01":
+            batteryVoltajeFirstIndex = 8 
+            batteryVoltajeSecondIndex = 6
+            break
+	}
     def batteryVoltaje = value[batteryVoltajeFirstIndex .. (batteryVoltajeFirstIndex+1)] + value[batteryVoltajeSecondIndex .. (batteryVoltajeSecondIndex+1)]
+    debugLog("batteryVoltaje: " + batteryVoltaje)
     def rawVolts = Integer.parseInt(batteryVoltaje,16)/1000
-    
+    debugLog("rawVolts: " + rawVolts)
     def minVolts = 2.5
 	def maxVolts = 3.0
 	def pct = (rawVolts - minVolts) / (maxVolts - minVolts)

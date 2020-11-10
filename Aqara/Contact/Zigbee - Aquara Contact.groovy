@@ -86,7 +86,6 @@ def parse(String description) {
 			if(msgMap["encoding"] == "42") {
 				msgMap = zigbee.parseDescriptionAsMap(description.replace('encoding: 42', 'encoding: 41'))
 			}
-			debugLog("After change encoding: "+ msgMap)  
 			map = parseBattery(msgMap["value"])
 			break
 		default:

@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.1.0013
+ *  Version v1.0.1.0014
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -50,7 +50,7 @@ preferences {
  private setVersion(){
 	def map = [:]
  	map.name = "driver"
-	map.value = "v1.0.1.0013"
+	map.value = "v1.0.1.0014"
 	updateDataValue(map.name,map.value)
  }
 
@@ -307,12 +307,13 @@ def zwaveEvent(hubitat.zwave.commands.batteryv1.BatteryReport cmd) {
 		map.value = cmd.batteryLevel
 	}
 	map.isStateChanged = true
+	infoLog(map,true)
 	map
 }
 
 
 def zwaveEvent(hubitat.zwave.commands.basicv1.BasicReport cmd) {
-	debugWarn("Zwave event received: $cmd")
+	warnLog("Zwave event received: $cmd")
 }
 
 def zwaveEvent(hubitat.zwave.Command cmd) {
@@ -418,17 +419,17 @@ def debugLog(msg){
 	}
 }
 
-def infoLog(msg){
-	if(infoLogging == true){
+def infoLog(msg,forced = false){
+	if(infoLogging == true || forced){
 		   log.info "[" + device.getLabel() + "] " + msg
 	}
 }
 def warnLog(msg){
-		   log.warn "[" + device.getLabel() + "] " + msg
+	log.warn "[" + device.getLabel() + "] " + msg
 }
 
 def traceLog(msg){
-		   log.trace "[" + device.getLabel() + "] " + msg
+	log.trace "[" + device.getLabel() + "] " + msg
 }
 
 def fanAuto(){

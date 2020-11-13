@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.0.0001
+ *  Version v1.0.0.0002
  
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -40,7 +40,7 @@ metadata {
 private setVersion(){
 	def map = [:]
  	map.name = "driver"
-	map.value = "v1.0.0.0001"
+	map.value = "v1.0.0.0002"
 	debugLog(map)
 	updateDataValue(map.name,map.value)
  }
@@ -193,6 +193,7 @@ private parseBattery(value) {
 	map.value= roundedPct
 	map.unit = "%"
 	map.descriptionText = descText
+	infoLog(map,true)
 	map
 	
 	
@@ -208,8 +209,8 @@ def debugLog(msg){
 	}
 }
 
-def infoLog(msg){
-	if(infoLogging == true){
+def infoLog(msg,forced = false){
+	if(infoLogging == true || forced){
 		log.info "[" + device.getLabel() + "] " + msg
 	}
 }

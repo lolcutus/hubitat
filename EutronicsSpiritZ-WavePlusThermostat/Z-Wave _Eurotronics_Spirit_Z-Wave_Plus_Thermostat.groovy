@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.1.0014
+ *  Version v1.0.2.0000
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -50,13 +50,13 @@ preferences {
  private setVersion(){
 	def map = [:]
  	map.name = "driver"
-	map.value = "v1.0.1.0014"
+	map.value = "v1.0.2.0000"
 	updateDataValue(map.name,map.value)
  }
 
 def configure() {  
  	setVersion()
- 	if(batteryLastReplaced == null){
+ 	if(device.currentValue("batteryLastReplaced") == null){
 		 resetBatteryReplacedDate()
 	}
 	def cmds = []

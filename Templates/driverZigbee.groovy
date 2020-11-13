@@ -44,7 +44,7 @@ private setVersion(){
  }
  def configure() {  
  	setVersion()
- 	if(batteryLastReplaced == null){
+ 	if(device.currentValue("batteryLastReplaced") == null){
 		 resetBatteryReplacedDate()
 	}
  }

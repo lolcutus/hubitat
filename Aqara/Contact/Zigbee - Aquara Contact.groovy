@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.2.0003
+ *  Version v1.0.3.0000
  
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -37,7 +37,7 @@ metadata {
 private setVersion(){
 	def map = [:]
  	map.name = "driver"
-	map.value = "v1.0.2.0003"
+	map.value = "v1.0.3.0000"
 	debugLog(map)
 	updateDataValue(map.name,map.value)
 	state.remove("prefsSetCount")
@@ -46,7 +46,7 @@ private setVersion(){
 def configure() {  
 	setVersion()
 	state.comment = "Works with model MCCGQ11LM"
-	if(batteryLastReplaced == null){
+	if(device.currentValue("batteryLastReplaced") == null){
 		 resetBatteryReplacedDate()
 	}
  }

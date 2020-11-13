@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.1.0012
+ *  Version v1.0.1.0013
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -50,7 +50,7 @@ preferences {
  private setVersion(){
 	def map = [:]
  	map.name = "driver"
-	map.value = "v1.0.1.0012"
+	map.value = "v1.0.1.0013"
 	updateDataValue(map.name,map.value)
  }
 
@@ -324,7 +324,6 @@ def setHeatingSetpoint(degrees, delay = standardBigDelay) {
 }
 
 def setHeatingSetpoint(Double degrees, Integer delay = standardBigDelay) {
-	traceLog( "setHeatingSetpoint($degrees, $delay)")
 	def deviceScale =  1
 	def deviceScaleString = deviceScale == 2 ? "C" : "F"
 	def locationScale = getTemperatureScale()

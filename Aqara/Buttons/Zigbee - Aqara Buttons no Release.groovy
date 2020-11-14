@@ -28,6 +28,7 @@ metadata {
 		
 		attribute "batteryLastReplaced", "Date"
 		attribute "lastUnknownMsg", "String"
+		attribute "checksMissed", "Number"
 
 		fingerprint endpointId : "01", profileId: "0104", deviceId: "01A1", inClusters: "0000,0003,0019,FFFF,0012", outClusters: "0000,0004,0003,0005,0019,FFFF,0012", manufacturer: "LUMI", model: "lumi.remote.b186acn01", aplication:"09"
 		fingerprint endpointId : "01", profileId: "0104", deviceId: "01A1", inClusters: "0000,0003,0019,FFFF,0012", outClusters: "0000,0004,0003,0005,0019,FFFF,0012", manufacturer: "LUMI", model: "lumi.remote.b286acn01", aplication:"09"

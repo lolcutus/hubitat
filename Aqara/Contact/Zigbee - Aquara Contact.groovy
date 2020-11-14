@@ -26,7 +26,7 @@ metadata {
 		
 		attribute "batteryLastReplaced", "Date"
 		attribute "lastUnknownMsg", "String"
-        attribute "checksMissed", "Number"
+		attribute "checksMissed", "Number"
 	
 		fingerprint endpointId: "01", profileId: "0104", deviceId: "5F01", inClusters: "0000,0003,FFFF,0006", outClusters: "0000,0004,FFFF", manufacturer: "Lumi", model: "lumi.sensor_magnet.aq2"
 	}

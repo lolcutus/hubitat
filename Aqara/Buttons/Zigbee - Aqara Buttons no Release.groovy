@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.1.0000
+ *  Version v1.0.4.0000
  
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -21,8 +21,10 @@ metadata {
 		capability "DoubleTapableButton"
 		capability "HoldableButton"
 		capability "PushableButton"
+		capability "PresenceSensor"
 		
 		command "resetBatteryReplacedDate"
+		command "checkMissed"
 		
 		attribute "batteryLastReplaced", "Date"
 		attribute "lastUnknownMsg", "String"
@@ -40,7 +42,7 @@ metadata {
 private setVersion(){
 	def map = [:]
  	map.name = "driver"
-	map.value = "v1.0.1.0000"
+	map.value = "v1.0.4.0000"
 	debugLog(map)
 	updateDataValue(map.name,map.value)
  }
@@ -65,7 +67,9 @@ def parse(String description) {
 	def BUTTON01 = "0012_0055"
 	def NOTKNOWN = "0000_FFF0"
 	// init end
-	debugLog("Parsing ${description}")
+	//debugLog("Parsing ${description}")
+	sendEvent(name: "presence", value: "present")
+	sendEvent(name: "checksMissed", value: "0")
 	def  msgMap
 	if(description.indexOf('attrId: FF01, encoding: 42') >= 0) {
 		msgMap = zigbee.parseDescriptionAsMap(description.replace('encoding: 42', 'encoding: F2'))
@@ -120,7 +124,7 @@ private setDataForModels(){
 		model =  "lumi.remote.b286acn01"
 		updateDataValue("model", model)
 	}
-	state.comment = "Works with model WXKG03LM, WXKG02LM"
+	state.comment = "Works with model WXKG03LM, WXKG02LM<BR>For presence to work you need to call 'checkMissed' with a rule one time each hour or more. Contact sensor send battery status each 50 minutes."
 	debugLog("Model '${model}'")
 	switch(model){
 		case "lumi.remote.b186acn01":
@@ -208,12 +212,25 @@ private parseBattery(value) {
 	map.descriptionText = descText
 	infoLog(map,true)
 	map
-	
-	
 }
 
 private resetBatteryReplacedDate() {
 	sendEvent(name: "batteryLastReplaced", value: new Date())
+}
+
+private checkMissed() {
+	def currentMissed = device.currentValue("checksMissed")
+	if(currentMissed == null){
+		currentMissed = 2
+	}
+	currentMissed = currentMissed +1
+	if(currentMissed > 10){
+	currentMissed = 10
+	}
+	sendEvent(name: "checksMissed", value: currentMissed)
+	if(currentMissed > 2){
+		sendEvent(name: "presence", value: "not present")
+	}
 }
 
 def debugLog(msg){

@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.3.0000
+ *  Version v1.0.4.0000
  
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -19,11 +19,14 @@ metadata {
 		capability "Battery"
 		capability "Configuration"
 		capability "Contact Sensor"
+		capability "PresenceSensor"
 		
 		command "resetBatteryReplacedDate"
+		command "checkMissed"
 		
 		attribute "batteryLastReplaced", "Date"
 		attribute "lastUnknownMsg", "String"
+        attribute "checksMissed", "Number"
 	
 		fingerprint endpointId: "01", profileId: "0104", deviceId: "5F01", inClusters: "0000,0003,FFFF,0006", outClusters: "0000,0004,FFFF", manufacturer: "Lumi", model: "lumi.sensor_magnet.aq2"
 	}
@@ -37,7 +40,7 @@ metadata {
 private setVersion(){
 	def map = [:]
  	map.name = "driver"
-	map.value = "v1.0.3.0000"
+	map.value = "v1.0.4.0000"
 	debugLog(map)
 	updateDataValue(map.name,map.value)
 	state.remove("prefsSetCount")
@@ -45,7 +48,7 @@ private setVersion(){
  }
 def configure() {  
 	setVersion()
-	state.comment = "Works with model MCCGQ11LM"
+	state.comment = "Works with model MCCGQ11LM<BR>For presence to work you need to call 'checkMissed' with a rule one time each hour or more. Contact sensor send battery status each 50 minutes."
 	if(device.currentValue("batteryLastReplaced") == null){
 		 resetBatteryReplacedDate()
 	}
@@ -54,13 +57,16 @@ def configure() {
 	
 // Parse incoming device messages to generate events
 def parse(String description) {
-    //init
-    def MODEL = "0000_0005"
-    def CONTACT = "0006_0000"
-    def BATTERY01 = "0000_FF01"
-    //end Init
+	//init
+	def MODEL = "0000_0005"
+	def CONTACT = "0006_0000"
+	def BATTERY01 = "0000_FF01"
+	//end Init
+	
 	//debugLog("Parsing ${description}")
-    def  msgMap = zigbee.parseDescriptionAsMap(description)
+	sendEvent(name: "presence", value: "present")
+	sendEvent(name: "checksMissed", value: "0")
+	def  msgMap = zigbee.parseDescriptionAsMap(description)
 	debugLog(msgMap)
 	if(!msgMap.containsKey("cluster")){
 		return [:]
@@ -137,6 +143,21 @@ private parseBattery(value) {
 
 private resetBatteryReplacedDate() {
 	sendEvent(name: "batteryLastReplaced", value: new Date())
+}
+
+private checkMissed() {
+	def currentMissed = device.currentValue("checksMissed")
+	if(currentMissed == null){
+		currentMissed = 2
+	}
+	currentMissed = currentMissed +1
+	if(currentMissed > 10){
+	currentMissed = 10
+	}
+	sendEvent(name: "checksMissed", value: currentMissed)
+	if(currentMissed > 2){
+		sendEvent(name: "presence", value: "not present")
+	}
 }
 
 def debugLog(msg){

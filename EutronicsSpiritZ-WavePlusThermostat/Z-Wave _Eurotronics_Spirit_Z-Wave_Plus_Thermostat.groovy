@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.2.0000
+ *  Version v1.0.3.0000
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -25,6 +25,7 @@ metadata {
 		capability "Battery"
 		
 		command "resetBatteryReplacedDate"
+		command "pollBattery"
 		
 		attribute "batteryLastReplaced", "Date"
 		attribute "valve", "String"
@@ -50,7 +51,7 @@ preferences {
  private setVersion(){
 	def map = [:]
  	map.name = "driver"
-	map.value = "v1.0.2.0000"
+	map.value = "v1.0.3.0000"
 	updateDataValue(map.name,map.value)
  }
 
@@ -87,7 +88,14 @@ def poll() {
 	cmds << zwave.thermostatSetpointV1.thermostatSetpointGet(setpointType: 1)
 	cmds << zwave.thermostatModeV2.thermostatModeGet()
 	cmds << zwave.switchMultilevelV3.switchMultilevelGet() //valve
-	
+	cmds << zwave.batteryV1.batteryGet()
+	sendCommands(cmds,standardBigDelay)
+}
+
+def pollBattery() {
+	debugLog("Polling battery....")
+	def cmds = []
+	cmds << zwave.batteryV1.batteryGet()
 	sendCommands(cmds,standardBigDelay)
 }
 

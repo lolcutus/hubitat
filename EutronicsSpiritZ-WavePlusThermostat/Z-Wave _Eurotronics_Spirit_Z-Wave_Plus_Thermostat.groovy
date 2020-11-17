@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.4.0001
+ *  Version v1.0.4.0002
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -26,6 +26,7 @@ metadata {
 		
 		command "resetBatteryReplacedDate"
 		command "pollBattery"
+        command "setTemperatureOffset"
 		
 		attribute "batteryLastReplaced", "Date"
 		attribute "valve", "String"
@@ -52,13 +53,12 @@ preferences {
  private setVersion(){
 	def map = [:]
  	map.name = "driver"
-	map.value = "v1.0.4.0001"
+	map.value = "v1.0.4.0002"
 	updateDataValue(map.name,map.value)
  }
 
 def configure() {
-	infoLog("Condfigre start ...",true)  
- 	setVersion()
+	setVersion()
  	if(device.currentValue("batteryLastReplaced") == null){
 		 resetBatteryReplacedDate()
 	}
@@ -81,7 +81,6 @@ def configure() {
 	cmds << zwave.configurationV1.configurationGet(parameterNumber:8)
 	
 	sendCommands(cmds,standardBigDelay)  
-	infoLog("Condfigure end ...",true)   
  }
  
 def poll() {
@@ -120,6 +119,14 @@ def parse(String description)
 
 private resetBatteryReplacedDate() {
 	sendEvent(name: "batteryLastReplaced", value: new Date())
+}
+
+private setTemperatureOffset(){
+    def cmds = []
+    cmds << zwave.configurationV1.configurationSet(configurationValue: tempOffset == null ? [0] : [tempOffset*10], parameterNumber:8, size:1, scaledConfigurationValue: tempOffset == null ? 0 : tempOffset*10)
+	cmds << zwave.configurationV1.configurationGet(parameterNumber:8)
+	
+	sendCommands(cmds,standardBigDelay)  
 }
 
 def zwaveEvent(hubitat.zwave.commands.switchmultilevelv3.SwitchMultilevelReport cmd){

@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.4.0000
+ *  Version v1.0.4.0001
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -52,11 +52,12 @@ preferences {
  private setVersion(){
 	def map = [:]
  	map.name = "driver"
-	map.value = "v1.0.4.0000"
+	map.value = "v1.0.4.0001"
 	updateDataValue(map.name,map.value)
  }
 
-def configure() {  
+def configure() {
+	infoLog("Condfigre start ...",true)  
  	setVersion()
  	if(device.currentValue("batteryLastReplaced") == null){
 		 resetBatteryReplacedDate()
@@ -78,10 +79,9 @@ def configure() {
 	cmds << zwave.configurationV1.configurationGet(parameterNumber:7)
 	cmds << zwave.configurationV1.configurationSet(configurationValue: tempOffset == null ? [0] : [tempOffset*10], parameterNumber:8, size:1, scaledConfigurationValue: tempOffset == null ? 0 : tempOffset*10)
 	cmds << zwave.configurationV1.configurationGet(parameterNumber:8)
-	cmds << zwave.thermostatModeV2.thermostatModeSupportedGet()
-	cmds << zwave.batteryV1.batteryGet()
 	
-	sendCommands(cmds,standardBigDelay)   
+	sendCommands(cmds,standardBigDelay)  
+	infoLog("Condfigure end ...",true)   
  }
  
 def poll() {

@@ -18,11 +18,14 @@ metadata {
 	definition (name: "Zigbee Driver Template", namespace: "lolcutus", author: "lolcutus") {
 		capability "Battery"
 		capability "Configuration"
+		capability "PresenceSensor"
 		
 		command "resetBatteryReplacedDate"
+		command "checkMissed"
 		
 		attribute "batteryLastReplaced", "Date"
 		attribute "lastUnknownMsg", "String"
+		attribute "checksMissed", "Number"
 
 		fingerprint endpointId: "01", profileId: "0104", deviceId: "0104", inClusters: "0000,0003,FFFF,0019", outClusters: "0000,0004,0003,0006,0008,0005,0019", manufacturer: "LUMI", model: "lumi.sensor_magnet"
 
@@ -32,6 +35,7 @@ metadata {
 	preferences {
 		input(name: "debugLogging", type: "bool", title: "Enable debug logging", description: "" , defaultValue: false, submitOnChange: true, displayDuringSetup: false, required: false)
 		input(name: "infoLogging", type: "bool", title: "Enable info logging", description: "", defaultValue: true, submitOnChange: true, displayDuringSetup: false, required: false)
+		input(name: "showBatteryInfo", type: "bool", title: "Show battery messages in log", description: "", defaultValue: true, submitOnChange: true, displayDuringSetup: false, required: false)
 	}
 }
 
@@ -55,7 +59,8 @@ def parse(String description) {
 	//init
 	def MODEL = "0000_0005"
 	// init end
-	
+	sendEvent(name: "presence", value: "present")
+	sendEvent(name: "checksMissed", value: "0")
 	debugLog("Parsing ${description}")
 	def  msgMap = zigbee.parseDescriptionAsMap(description)
 	debugLog(msgMap)
@@ -90,17 +95,33 @@ private resetBatteryReplacedDate() {
 	sendEvent(name: "batteryLastReplaced", value: new Date())
 }
 
+private checkMissed() {
+	def currentMissed = device.currentValue("checksMissed")
+	if(currentMissed == null){
+		currentMissed = 2
+	}
+	currentMissed = currentMissed +1
+	if(currentMissed > 10){
+	currentMissed = 10
+	}
+	sendEvent(name: "checksMissed", value: currentMissed)
+	if(currentMissed >= 2){
+		sendEvent(name: "presence", value: "not present")
+	}
+}
+
 def debugLog(msg){
 	if(debugLogging == true){
 		log.debug "["+device.getLabel() + "] " + msg
 	}
 }
 
-def infoLog(msg){
-	if(infoLogging == true){
+def infoLog(msg,forced = false){
+	if(infoLogging == true || forced){
 		log.info "[" + device.getLabel() + "] " + msg
 	}
 }
+
 def warnLog(msg){
 	log.warn "[" + device.getLabel() + "] " + msg
 }

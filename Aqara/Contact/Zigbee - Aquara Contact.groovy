@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.4.0001
+ *  Version v1.0.4.0002
  
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -34,13 +34,14 @@ metadata {
 	preferences {
 		input(name: "debugLogging", type: "bool", title: "Enable debug logging", description: "" , defaultValue: false, submitOnChange: true, displayDuringSetup: false, required: false)
 		input(name: "infoLogging", type: "bool", title: "Enable info logging", description: "", defaultValue: true, submitOnChange: true, displayDuringSetup: false, required: false)
+		input(name: "showBatteryInfo", type: "bool", title: "Show battery messages in log", description: "", defaultValue: true, submitOnChange: true, displayDuringSetup: false, required: false)
 	}
 }
 
 private setVersion(){
 	def map = [:]
  	map.name = "driver"
-	map.value = "v1.0.4.0001"
+	map.value = "v1.0.4.0002"
 	debugLog(map)
 	updateDataValue(map.name,map.value)
 	state.remove("prefsSetCount")
@@ -135,7 +136,7 @@ private parseBattery(value) {
 	map.value= roundedPct
 	map.unit = "%"
 	map.descriptionText = descText
-	infoLog(map,true)
+	infoLog(map,showBatteryInfo)
 	map
 	
 	
@@ -167,7 +168,7 @@ def debugLog(msg){
 }
 
 def infoLog(msg,forced = false){
-	if(infoLogging == true || forced){
+	if(infoLogging || forced){
 		log.info "[" + device.getLabel() + "] " + msg
 	}
 }

@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.4.003
+ *  Version v1.0.4.0004
  
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -15,7 +15,7 @@
  */
 
 metadata {
-	definition (name: "Zigbee - Aqara Motion", namespace: "lolcutus", author: "lolcutus", importUrl: "https://raw.githubusercontent.com/lolcutus/hubitat/master/Aqara/Motion/Zigbee%20-%20Aqara%20BMotion%20no%20Release.groovy") {
+	definition (name: "Zigbee - Aqara Motion", namespace: "lolcutus", author: "lolcutus", importUrl: "https://raw.githubusercontent.com/lolcutus/hubitat/master/Aqara/Motion/Zigbee%20-%20Aqara%20Motion.groovy") {
 		capability "Battery"
 		capability "Configuration"
 		capability "PresenceSensor"
@@ -45,7 +45,7 @@ metadata {
 private setVersion(){
 	def map = [:]
  	map.name = "driver"
-	map.value = "v1.0.4.003"
+	map.value = "v1.0.4.0004"
 	debugLog(map)
 	updateDataValue(map.name,map.value)
  }
@@ -94,6 +94,7 @@ def parse(String description) {
 			map.value = valueHex
 			updateDataValue(map.name, map.value)
 			setVersion()
+			infoLog(map)
 			break
 		case ILLUMINATION:
 			Integer lux = Integer.parseInt(msgMap['value'], 16)
@@ -101,20 +102,22 @@ def parse(String description) {
 			map.value = lux
 			map.unit = "lux"
 			map.isStateChange = true
+			infoLog(map)
 			break
 		case MOTION:
 			setToActive()
+			infoLog(map)
 			break
 		case BATTERY01:
 			map = parseBattery(msgMap["value"])
+			infoLog(map,showBatteryInfo)
 			break
 		default:
 			map.name = "lastUnknownMsg"
 			map.value = msgMap
 			warnLog("Message not procesed: ${msgMap}")
 	}
-	infoLog(map)
-   	return map
+	return map
 }
 
 private parseBattery(value) {

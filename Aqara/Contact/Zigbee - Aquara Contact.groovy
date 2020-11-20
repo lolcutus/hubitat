@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.4.0002
+ *  Version v1.0.4.0003
  
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -41,11 +41,11 @@ metadata {
 private setVersion(){
 	def map = [:]
  	map.name = "driver"
-	map.value = "v1.0.4.0002"
+	map.value = "v1.0.4.0003"
 	debugLog(map)
 	updateDataValue(map.name,map.value)
 	state.remove("prefsSetCount")
-    removeDataValue("application")
+	removeDataValue("application")
  }
 def configure() {  
 	setVersion()
@@ -84,7 +84,7 @@ def parse(String description) {
 			if(map.value == "lumi.sensor_magnet.aq2" && getDataValue("manufacturer") == null){
 				updateDataValue("manufacturer", "Lumi")
 			}
-            setVersion()
+			setVersion()
 			break
 		case CONTACT:
 			map = parseContact(Integer.parseInt(valueHex))
@@ -103,40 +103,39 @@ def parse(String description) {
 	infoLog(map)
    	return map
 }
-                
+				
 private parseContact(closedOpen) {
-    debugLog("Value ${closedOpen}")
-    def map = [:]
+	debugLog("Value ${closedOpen}")
+	def map = [:]
 	map.name = "contact"
-    if(closedOpen == 0){
-        map.value = "closed"
-    }else{
-        map.value = "open"
-    }
+	if(closedOpen == 0){
+		map.value = "closed"
+	}else{
+		map.value = "open"
+	}
 	map.descriptionText = "Contact was ${map.value}!"
 	map.isStateChange = true
-    map
+	map
 }
 
 private parseBattery(value) {
-    def batteryVoltajeFirstIndex = 6 
-    def batteryVoltajeSecondIndex = 5
-    
-    def batteryVoltaje = value[batteryVoltajeFirstIndex .. (batteryVoltajeFirstIndex+1)] + value[batteryVoltajeSecondIndex .. (batteryVoltajeSecondIndex+1)]
-    def rawVolts = Integer.parseInt(batteryVoltaje,16)/1000
-    
-    def minVolts = 2.5
+	def batteryVoltajeFirstIndex = 6 
+	def batteryVoltajeSecondIndex = 5
+	
+	def batteryVoltaje = value[batteryVoltajeFirstIndex .. (batteryVoltajeFirstIndex+1)] + value[batteryVoltajeSecondIndex .. (batteryVoltajeSecondIndex+1)]
+	def rawVolts = Integer.parseInt(batteryVoltaje,16)/1000
+	
+	def minVolts = 2.5
 	def maxVolts = 3.0
 	def pct = (rawVolts - minVolts) / (maxVolts - minVolts)
 	def roundedPct = Math.min(100, Math.round(pct * 100))
 	def descText = "Battery level is ${roundedPct}% (${rawVolts} Volts)"
 	
-    def map = [:]
-    map.name = "battery"
+	def map = [:]
+	map.name = "battery"
 	map.value= roundedPct
 	map.unit = "%"
 	map.descriptionText = descText
-	infoLog(map,showBatteryInfo)
 	map
 	
 	

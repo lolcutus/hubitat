@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.4.0003
+ *  Version v1.0.4.0005
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -54,7 +54,7 @@ preferences {
  private setVersion(){
 	def map = [:]
  	map.name = "driver"
-	map.value = "v1.0.4.0003"
+	map.value = "v1.0.4.0005"
 	updateDataValue(map.name,map.value)
  }
 
@@ -379,7 +379,7 @@ def setThermostatMode(String value) {
 	if(modeMap.containsKey(value)){
 		def cmds = []
 		cmds << zwave.thermostatModeV2.thermostatModeSet(mode: modeMap[value])
-		cmds << zwave.thermostatSetpointV1.thermostatSetpointGet(setpointType: 1)
+		cmds << zwave.thermostatModeV2.thermostatModeGet()
 		sendCommands(cmds)
 	}else{
 		warnLog("Mode '${value}' not supported!")

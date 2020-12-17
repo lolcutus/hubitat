@@ -134,7 +134,7 @@ private parseBattery(value) {
 	debugLog("batteryVoltaje: " + batteryVoltaje)
 	def rawVolts = Integer.parseInt(batteryVoltaje,16)/1000
 	debugLog("rawVolts: " + rawVolts)
-	def minVolts = 2.5
+	def minVolts = 2.8
 	def maxVolts = 3.3
 	def pct = (rawVolts - minVolts) / (maxVolts - minVolts)
 	def roundedPct = Math.min(100, Math.round(pct * 100))

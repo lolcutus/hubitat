@@ -27,7 +27,7 @@ metadata {
 		attribute "lastUnknownMsg", "String"
 		attribute "checksMissed", "Number"
 
-		fingerprint endpointId: "01", profileId: "0104", deviceId: "0104", inClusters: "0000,0003,FFFF,0019", outClusters: "0000,0004,0003,0006,0008,0005,0019", manufacturer: "LUMI", model: "lumi.sen_ill.mgl01"
+		fingerprint endpointId: "01", profileId: "0104", deviceId: "0104", inClusters: "0000,0400,0003,0001", outClusters: "0003", manufacturer: "LUMI", model: "lumi.sen_ill.mgl01"
 
 	}
 
@@ -46,7 +46,9 @@ private setVersion(){
 	updateDataValue(map.name,map.value)
  }
  def configure() {  
+    unschedule()
  	setVersion()
+     state.comment = "Works with model GZCGQ01LM<BR>For presence to work you need to call 'checkMissed' with a rule one time each hour or more. Contact sensor send battery status each 50 minutes."
  	if(device.currentValue("batteryLastReplaced") == null){
 		 resetBatteryReplacedDate()
 	}

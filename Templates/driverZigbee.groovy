@@ -85,6 +85,7 @@ def parse(String description) {
 		case MODEL:
 			map.name = "model"
 			map.value = valueHex
+			infoLog(map)
 			updateDataValue(map.name, map.value)
 			setVersion()
 			break
@@ -93,7 +94,7 @@ def parse(String description) {
 			map.value = msgMap
 			warnLog("Message not procesed: ${msgMap}")
 	}
-	infoLog(map)
+	
    	return map
 }
 

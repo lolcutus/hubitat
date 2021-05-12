@@ -83,6 +83,7 @@ def parse(String description) {
 		case MODEL:
 			map.name = "model"
 			map.value = valueHex
+			infoLog(map)
 			updateDataValue(map.name, map.value)
 			setVersion()
 			break
@@ -97,8 +98,8 @@ def parse(String description) {
 			map.name = "illuminance"
 			map.value= lux
 			map.unit = "lux"
-			map
-			break
+			infoLog(map)
+   			break
 		case BATTERY01:
 			map = parseBattery(valueHex)
 			infoLog(map,showBatteryInfo)
@@ -108,8 +109,7 @@ def parse(String description) {
 			map.value = msgMap
 			warnLog("Message not procesed: ${msgMap}")
 	}
-	infoLog(map)
-   	return map
+	return map
 }
 
 private setDataForModels(){

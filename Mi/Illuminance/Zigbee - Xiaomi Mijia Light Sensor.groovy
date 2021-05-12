@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v0.0.1.0003
+ *  Version v0.0.1.0004
  
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -43,7 +43,7 @@ metadata {
 private setVersion(){
 	def map = [:]
  	map.name = "driver"
-	map.value = "v0.0.1.0003"
+	map.value = "v0.0.1.0004"
 	debugLog(map)
 	updateDataValue(map.name,map.value)
  }
@@ -53,8 +53,6 @@ private setVersion(){
 	if(device.currentValue("batteryLastReplaced") == null){
 		 resetBatteryReplacedDate()
 	}
-	state.remove("lastUnknownMsg")
-	device.updateDataValue("lastUnknownMsg","aa")
 }
 
 	
@@ -102,7 +100,7 @@ def parse(String description) {
 			map
 			break
 		case BATTERY01:
-			map = parseBattery(msgMap["value"])
+			map = parseBattery(valueHex)
 			infoLog(map,showBatteryInfo)
 			break
 		default:
@@ -134,20 +132,9 @@ private setDataForModels(){
 
 
 private parseBattery(value) {
-	def batteryVoltajeFirstIndex
-	def batteryVoltajeSecondIndex
-	def model = getDataValue("model");
-	switch(model){
-		case "lumi.sen_ill.mgl01":
-			batteryVoltajeFirstIndex = 8 
-			batteryVoltajeSecondIndex = 6
-			break
-	}
-	def batteryVoltaje = value[batteryVoltajeFirstIndex .. (batteryVoltajeFirstIndex+1)] + value[batteryVoltajeSecondIndex .. (batteryVoltajeSecondIndex+1)]
-	debugLog("batteryVoltaje: " + batteryVoltaje)
-	def rawVolts = Integer.parseInt(batteryVoltaje,16)/1000
+	def rawVolts = Integer.parseInt(value,16)/10
 	debugLog("rawVolts: " + rawVolts)
-	def minVolts = 2.8
+	def minVolts = 2.7
 	def maxVolts = 3.1
 	def pct = (rawVolts - minVolts) / (maxVolts - minVolts)
 	def roundedPct = Math.min(100, Math.round(pct * 100))

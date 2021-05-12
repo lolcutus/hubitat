@@ -22,6 +22,7 @@ metadata {
 		
 		command "resetBatteryReplacedDate"
 		command "checkMissed"
+		command "resetLastUnknownMsg"
 		
 		attribute "batteryLastReplaced", "Date"
 		attribute "lastUnknownMsg", "String"
@@ -48,9 +49,14 @@ private setVersion(){
  }
  def configure() {  
  	setVersion()
+ 	setDataForModels()
  	if(device.currentValue("batteryLastReplaced") == null){
 		 resetBatteryReplacedDate()
 	}
+	//change device details
+	//device.updateDataValue("test","testaa")
+	//device.removeDataValue("lastUnknownMsg")
+	//unschedule()
  }
 
 	
@@ -95,6 +101,47 @@ private resetBatteryReplacedDate() {
 	sendEvent(name: "batteryLastReplaced", value: new Date())
 }
 
+private setDataForModels(){
+	def map = [:]
+	def model = getDataValue("model");
+   if(model.length() > "lumi.remote.b186acn01".length() && model.startsWith("lumi.remote.b186acn01")){
+		model =  "lumi.remote.b186acn01"
+		updateDataValue("model", model)
+	}
+	if(model.length() > "lumi.remote.b286acn01".length() && model.startsWith("lumi.remote.b286acn01")){
+		model =  "lumi.remote.b286acn01"
+		updateDataValue("model", model)
+	}
+	state.comment = "Works with model WXKG03LM, WXKG02LM<BR>For presence to work you need to call 'checkMissed' with a rule one time each hour or more. Contact sensor send battery status each 50 minutes."
+	debugLog("Model '${model}'")
+	switch(model){
+		case "lumi.remote.b186acn01":
+			debugLog("Configure ${model}")
+			if(getDataValue("manufacturer") == null){
+				updateDataValue("manufacturer", "Lumi")
+			}
+			updateDataValue("modelName", "Aqara 1-button Light Switch (WXKG03LM - 2018)")
+			updateDataValue("modelCode", "WXKG03LM")
+			updateDataValue("physicalButtons", "1")
+			map.name = "numberOfButtons"
+			map.value = 1
+			break
+		case "lumi.remote.b286acn01":
+			debugLog("Configure ${model}")
+			if(getDataValue("manufacturer") == null){
+				updateDataValue("manufacturer", "Lumi")
+			}
+			updateDataValue("modelName", "Aqara 2-button Light Switch (WXKG02LM - 2018)")
+			updateDataValue("modelCode", "WXKG02LM")
+			updateDataValue("physicalButtons", "3")
+			map.name = "numberOfButtons"
+			map.value = 3
+			break
+	}
+	map
+	
+}
+
 private checkMissed() {
 	def currentMissed = device.currentValue("checksMissed")
 	if(currentMissed == null){
@@ -108,6 +155,10 @@ private checkMissed() {
 	if(currentMissed >= 2){
 		sendEvent(name: "presence", value: "not present")
 	}
+}
+
+private resetLastUnknownMsg() {
+	sendEvent(name: "lastUnknownMsg", value: " ")
 }
 
 def debugLog(msg){

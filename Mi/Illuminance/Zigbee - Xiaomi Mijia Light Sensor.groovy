@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v0.0.1.0001
+ *  Version v0.0.1.0003
  
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -19,9 +19,11 @@ metadata {
 		capability "Battery"
 		capability "Configuration"
 		capability "PresenceSensor"
+		capability "IlluminanceMeasurement"
 		
 		command "resetBatteryReplacedDate"
 		command "checkMissed"
+		command "resetLastUnknownMsg"
 		
 		attribute "batteryLastReplaced", "Date"
 		attribute "lastUnknownMsg", "String"
@@ -41,24 +43,27 @@ metadata {
 private setVersion(){
 	def map = [:]
  	map.name = "driver"
-	map.value = "v0.0.1.0001"
+	map.value = "v0.0.1.0003"
 	debugLog(map)
 	updateDataValue(map.name,map.value)
  }
  def configure() {  
-    unschedule()
- 	setVersion()
-     state.comment = "Works with model GZCGQ01LM<BR>For presence to work you need to call 'checkMissed' with a rule one time each hour or more. Contact sensor send battery status each 50 minutes."
- 	if(device.currentValue("batteryLastReplaced") == null){
+	setVersion()
+	setDataForModels()
+	if(device.currentValue("batteryLastReplaced") == null){
 		 resetBatteryReplacedDate()
 	}
- }
+	state.remove("lastUnknownMsg")
+	device.updateDataValue("lastUnknownMsg","aa")
+}
 
 	
 // Parse incoming device messages to generate events
 def parse(String description) {
 	//init
 	def MODEL = "0000_0005"
+	def ILLUMINANCE = "0400_0000"
+	def BATTERY01 = "0001_0020"
 	// init end
 	sendEvent(name: "presence", value: "present")
 	sendEvent(name: "checksMissed", value: "0")
@@ -83,6 +88,23 @@ def parse(String description) {
 			updateDataValue(map.name, map.value)
 			setVersion()
 			break
+		case ILLUMINANCE:
+			Integer rawValue = Integer.parseInt(valueHex, 16)
+			debugLog("Value int: ${rawValue}")
+			BigDecimal lux = rawValue > 0 ? Math.pow(10, rawValue / 10000.0) - 1.0 : 0
+			lux = lux.setScale(0, BigDecimal.ROUND_HALF_UP)
+			debugLog("Value lux: ${lux}")
+			BigDecimal oldLux = device.currentValue('illuminance') == null ? null : device.currentValue('illuminance')
+			debugLog("Old lux: ${oldLux}")
+			map.name = "illuminance"
+			map.value= lux
+			map.unit = "lux"
+			map
+			break
+		case BATTERY01:
+			map = parseBattery(msgMap["value"])
+			infoLog(map,showBatteryInfo)
+			break
 		default:
 			map.name = "lastUnknownMsg"
 			map.value = msgMap
@@ -92,9 +114,61 @@ def parse(String description) {
    	return map
 }
 
+private setDataForModels(){
+	def map = [:]
+	def model = getDataValue("model");
+ 	state.comment = "Works with model GZCGQ01LM<BR>For presence to work you need to call 'checkMissed' with a rule one time each hour or more. Contact sensor send battery status each 50 minutes."
+	debugLog("Model '${model}'")
+	switch(model){
+		case "lumi.sen_ill.mgl01":
+			debugLog("Configure ${model}")
+			if(getDataValue("manufacturer") == null){
+				updateDataValue("manufacturer", "Lumi")
+			}
+			updateDataValue("modelName", "Xiaomi Mijia Light Sensor")
+			updateDataValue("modelCode", "GZCGQ01LM")
+			break
+	}
+	map	
+}
+
+
+private parseBattery(value) {
+	def batteryVoltajeFirstIndex
+	def batteryVoltajeSecondIndex
+	def model = getDataValue("model");
+	switch(model){
+		case "lumi.sen_ill.mgl01":
+			batteryVoltajeFirstIndex = 8 
+			batteryVoltajeSecondIndex = 6
+			break
+	}
+	def batteryVoltaje = value[batteryVoltajeFirstIndex .. (batteryVoltajeFirstIndex+1)] + value[batteryVoltajeSecondIndex .. (batteryVoltajeSecondIndex+1)]
+	debugLog("batteryVoltaje: " + batteryVoltaje)
+	def rawVolts = Integer.parseInt(batteryVoltaje,16)/1000
+	debugLog("rawVolts: " + rawVolts)
+	def minVolts = 2.8
+	def maxVolts = 3.1
+	def pct = (rawVolts - minVolts) / (maxVolts - minVolts)
+	def roundedPct = Math.min(100, Math.round(pct * 100))
+	def descText = "Battery level is ${roundedPct}% (${rawVolts} Volts)"
+	
+	def map = [:]
+	map.name = "battery"
+	map.value= roundedPct
+	map.unit = "%"
+	map.descriptionText = descText
+	map
+}
+
 private resetBatteryReplacedDate() {
 	sendEvent(name: "batteryLastReplaced", value: new Date())
 }
+private resetLastUnknownMsg() {
+	sendEvent(name: "lastUnknownMsg", value: " ")
+}
+
+
 
 private checkMissed() {
 	def currentMissed = device.currentValue("checksMissed")

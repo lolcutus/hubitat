@@ -15,7 +15,7 @@
  */
 
 metadata {
-	definition (name: "Zigbee Driver Template", namespace: "lolcutus", author: "lolcutus") {
+	definition (name: "Zigbee Xiaomi Mijia Light Sensor", namespace: "lolcutus", author: "lolcutus") {
 		capability "Battery"
 		capability "Configuration"
 		capability "PresenceSensor"
@@ -27,9 +27,8 @@ metadata {
 		attribute "lastUnknownMsg", "String"
 		attribute "checksMissed", "Number"
 
-		fingerprint endpointId: "01", profileId: "0104", deviceId: "0104", inClusters: "0000,0003,FFFF,0019", outClusters: "0000,0004,0003,0006,0008,0005,0019", manufacturer: "LUMI", model: "lumi.sensor_magnet"
+		fingerprint endpointId: "01", profileId: "0104", deviceId: "0104", inClusters: "0000,0003,FFFF,0019", outClusters: "0000,0004,0003,0006,0008,0005,0019", manufacturer: "LUMI", model: "lumi.sen_ill.mgl01"
 
-		fingerprint endpointId: "01", profileId: "0104", deviceId: "5F01", inClusters: "0000,0003,FFFF,0006", outClusters: "0000,0004,FFFF", manufacturer: "LUMI", model: "lumi.sensor_magnet.aq2"
 	}
 
 	preferences {

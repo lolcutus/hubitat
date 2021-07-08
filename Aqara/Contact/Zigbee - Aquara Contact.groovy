@@ -106,21 +106,6 @@ def parse(String description) {
 	}
 	return map
 }
-
-private parseDescription(String description) {
-	Map msgMap = null
-	if(description.indexOf('encoding: 4C') >= 0) {
-		msgMap = zigbee.parseDescriptionAsMap(description.replace('encoding: 4C', 'encoding: F2'))
-		msgMap = unpackStructInMap(msgMap)
-	} else if(description.indexOf('attrId: FF01, encoding: 42') >= 0) {
-		msgMap = zigbee.parseDescriptionAsMap(description.replace('encoding: 42', 'encoding: F2'))
-		msgMap["encoding"] = "41"
-	} else {
-		msgMap = zigbee.parseDescriptionAsMap(description)
-	}
-	msgMap
-}
-
 private parseDescription(String description) {
 	Map msgMap = null
 	if(description.indexOf('encoding: 4C') >= 0) {

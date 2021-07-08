@@ -23,6 +23,7 @@ metadata {
 		command "resetBatteryReplacedDate"
 		command "checkMissed"
 		command "resetLastUnknownMsg"
+		command "updateDriverInfo"
 		
 		attribute "batteryLastReplaced", "Date"
 		attribute "lastUnknownMsg", "String"
@@ -156,6 +157,10 @@ private checkMissed() {
 	if(currentMissed >= 2){
 		sendEvent(name: "presence", value: "not present")
 	}
+}
+
+private updateDriverInfo(){
+	configure();
 }
 
 private resetLastUnknownMsg() {

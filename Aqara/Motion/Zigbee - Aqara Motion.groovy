@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.4.0006
+ *  Version v1.0.6.0006
  
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -26,6 +26,7 @@ metadata {
 		command "checkMissed"
 		command "setToActive"
 		command "setToInactive"
+		command "updateDriverInfo"
 		
 		attribute "batteryLastReplaced", "Date"
 		attribute "lastUnknownMsg", "String"
@@ -45,7 +46,7 @@ metadata {
 private setVersion(){
 	def map = [:]
  	map.name = "driver"
-	map.value = "v1.0.4.0006"
+	map.value = "v1.0.6.0006"
 	debugLog(map)
 	updateDataValue(map.name,map.value)
  }
@@ -69,13 +70,7 @@ def parse(String description) {
 	sendEvent(name: "presence", value: "present")
 	sendEvent(name: "checksMissed", value: "0")
 	debugLog("Parsing ${description}")
-	def  msgMap
-	if(description.indexOf('attrId: FF01, encoding: 42') >= 0) {
-		msgMap = zigbee.parseDescriptionAsMap(description.replace('encoding: 42', 'encoding: F2'))
-		msgMap["encoding"] = "41"
-	}else{
-		msgMap = zigbee.parseDescriptionAsMap(description)
-	}
+	Map msgMap = parseDescription(description)
 	debugLog(msgMap)
 	if(!msgMap.containsKey("cluster")){
 		return [:]
@@ -118,6 +113,20 @@ def parse(String description) {
 			warnLog("Message not procesed: ${msgMap}")
 	}
 	return map
+}
+
+private parseDescription(String description) {
+	Map msgMap = null
+	if(description.indexOf('encoding: 4C') >= 0) {
+		msgMap = zigbee.parseDescriptionAsMap(description.replace('encoding: 4C', 'encoding: F2'))
+		msgMap = unpackStructInMap(msgMap)
+	} else if(description.indexOf('attrId: FF01, encoding: 42') >= 0) {
+		msgMap = zigbee.parseDescriptionAsMap(description.replace('encoding: 42', 'encoding: F2'))
+		msgMap["encoding"] = "41"
+	} else {
+		msgMap = zigbee.parseDescriptionAsMap(description)
+	}
+	msgMap
 }
 
 private parseBattery(value) {

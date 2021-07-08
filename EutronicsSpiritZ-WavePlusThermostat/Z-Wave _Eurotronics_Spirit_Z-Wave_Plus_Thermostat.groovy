@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.4.0005
+ *  Version v1.0.6.0006
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -26,7 +26,8 @@ metadata {
 		
 		command "resetBatteryReplacedDate"
 		command "pollBattery"
-        command "setTemperatureOffset"
+		command "setTemperatureOffset"
+		command "updateDriverInfo"
 		
 		attribute "batteryLastReplaced", "Date"
 		attribute "valve", "String"
@@ -54,7 +55,7 @@ preferences {
  private setVersion(){
 	def map = [:]
  	map.name = "driver"
-	map.value = "v1.0.4.0005"
+	map.value = "v1.0.6.0006"
 	updateDataValue(map.name,map.value)
  }
 

@@ -8,7 +8,7 @@ library (
 	documentationLink: ""
 )
 
-void parseDescription(String description) {
+Map parseDescription(String description) {
 	Map msgMap = null
 	if(description.indexOf('encoding: 4C') >= 0) {
 		msgMap = zigbee.parseDescriptionAsMap(description.replace('encoding: 4C', 'encoding: F2'))
@@ -22,7 +22,7 @@ void parseDescription(String description) {
 	msgMap
 }
  
-private parseBattery(value) {
+Map parseBattery(value) {
 	def batteryVoltajeFirstIndex
 	def batteryVoltajeSecondIndex
 	def model = getDataValue("model");

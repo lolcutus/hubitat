@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.6.0006
+ *  Version v1.0.7.0000
  
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -13,6 +13,9 @@
  *  for the specific language governing permissions and limitations under the License.
  *
  */
+ 
+#include lolcutus.driverUtilities
+#include lolcutus.aqaraUtilities
 
 metadata {
 	definition (name: "Zigbee - Aqara Buttons - no Release", namespace: "lolcutus", author: "lolcutus", importUrl: "https://raw.githubusercontent.com/lolcutus/hubitat/master/Aqara/Buttons/Zigbee%20-%20Aqara%20Buttons%20no%20Release.groovy") {
@@ -42,17 +45,10 @@ metadata {
 	}
 }
 
-private setVersion(){
-	def map = [:]
- 	map.name = "driver"
-	map.value = "v1.0.6.0006"
-	debugLog(map)
-	updateDataValue(map.name,map.value)
- }
- def configure() {  
+def configure() {  
 	def map = setDataForModels()
 	sendEvent(map)
- 	setVersion()
+ 	setVersion("v1.0.7.0000")
  	if(device.currentValue("batteryLastReplaced") == null){
 		 resetBatteryReplacedDate()
 	}
@@ -69,10 +65,9 @@ def parse(String description) {
 	def BATTERY01 = "0000_FF01"
 	def BUTTON01 = "0012_0055"
 	def NOTKNOWN = "0000_FFF0"
-	// init end
-	//debugLog("Parsing ${description}")
-	sendEvent(name: "presence", value: "present")
-	sendEvent(name: "checksMissed", value: "0")
+	
+	messageReceived()
+	
 	Map msgMap = parseDescription(description)
 	
 	debugLog(msgMap)
@@ -110,20 +105,6 @@ def parse(String description) {
 			warnLog("Message not procesed: ${msgMap}")
 	}
 	return map
-}
-
-private parseDescription(String description) {
-	Map msgMap = null
-	if(description.indexOf('encoding: 4C') >= 0) {
-		msgMap = zigbee.parseDescriptionAsMap(description.replace('encoding: 4C', 'encoding: F2'))
-		msgMap = unpackStructInMap(msgMap)
-	} else if(description.indexOf('attrId: FF01, encoding: 42') >= 0) {
-		msgMap = zigbee.parseDescriptionAsMap(description.replace('encoding: 42', 'encoding: F2'))
-		msgMap["encoding"] = "41"
-	} else {
-		msgMap = zigbee.parseDescriptionAsMap(description)
-	}
-	msgMap
 }
 
 private setDataForModels(){
@@ -168,7 +149,6 @@ private setDataForModels(){
 }
 
 private parseButtonMessage(msgMap) {
-	
 	def buttonNum =  Integer.parseInt(msgMap.endpoint)
 	debugLog("Button ${buttonNum}")
 	def existingButtons = getDataValue("physicalButtons")
@@ -196,71 +176,4 @@ private parseButtonMessage(msgMap) {
 	map
 }
 
-private parseBattery(value) {
-	def batteryVoltajeFirstIndex
-	def batteryVoltajeSecondIndex
-	def model = getDataValue("model");
-	switch(model){
-		case "lumi.remote.b1acn01":
-		case "lumi.remote.b186acn01":
-		case "lumi.remote.b286acn01":
-			batteryVoltajeFirstIndex = 8 
-			batteryVoltajeSecondIndex = 6
-			break
-	}
-	def batteryVoltaje = value[batteryVoltajeFirstIndex .. (batteryVoltajeFirstIndex+1)] + value[batteryVoltajeSecondIndex .. (batteryVoltajeSecondIndex+1)]
-	debugLog("batteryVoltaje: " + batteryVoltaje)
-	def rawVolts = Integer.parseInt(batteryVoltaje,16)/1000
-	debugLog("rawVolts: " + rawVolts)
-	def minVolts = 2.8
-	def maxVolts = 3.1
-	def pct = (rawVolts - minVolts) / (maxVolts - minVolts)
-	def roundedPct = Math.min(100, Math.round(pct * 100))
-	def descText = "Battery level is ${roundedPct}% (${rawVolts} Volts)"
-	
-	def map = [:]
-	map.name = "battery"
-	map.value= roundedPct
-	map.unit = "%"
-	map.descriptionText = descText
-	map
-}
 
-private resetBatteryReplacedDate() {
-	sendEvent(name: "batteryLastReplaced", value: new Date())
-}
-
-private checkMissed() {
-	def currentMissed = device.currentValue("checksMissed")
-	if(currentMissed == null){
-		currentMissed = 2
-	}
-	currentMissed = currentMissed +1
-	if(currentMissed > 10){
-	currentMissed = 10
-	}
-	sendEvent(name: "checksMissed", value: currentMissed)
-	if(currentMissed >= 2){
-		sendEvent(name: "presence", value: "not present")
-	}
-}
-
-def debugLog(msg){
-	if(debugLogging == true){
-		log.debug "["+device.getLabel() + "] " + msg
-	}
-}
-
-def infoLog(msg,forced = false){
-	if(infoLogging == true || forced){
-		log.info "[" + device.getLabel() + "] " + msg
-	}
-}
-
-def warnLog(msg){
-	log.warn "[" + device.getLabel() + "] " + msg
-}
-
-def traceLog(msg){
-	log.trace "[" + device.getLabel() + "] " + msg
-}

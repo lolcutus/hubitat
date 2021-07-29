@@ -23,8 +23,8 @@ Map parseDescription(String description) {
 }
  
 Map parseBattery(value) {
-	def batteryVoltajeFirstIndex
-	def batteryVoltajeSecondIndex
+	def batteryVoltajeFirstIndex = 6
+	def batteryVoltajeSecondIndex = 5
 	def model = getDataValue("model");
 	switch(model){
 		case "lumi.remote.b1acn01":
@@ -33,6 +33,10 @@ Map parseBattery(value) {
 		case "lumi.sensor_motion.aq2":
 			batteryVoltajeFirstIndex = 8 
 			batteryVoltajeSecondIndex = 6
+			break
+		case "lumi.sensor_magnet.aq2":
+			batteryVoltajeFirstIndex = 6 
+			batteryVoltajeSecondIndex = 5
 			break
 	}
 	def batteryVoltaje = value[batteryVoltajeFirstIndex .. (batteryVoltajeFirstIndex+1)] + value[batteryVoltajeSecondIndex .. (batteryVoltajeSecondIndex+1)]

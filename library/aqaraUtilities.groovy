@@ -28,7 +28,6 @@ private parseBattery(value) {
 	def model = getDataValue("model");
 	switch(model){
 		case "lumi.remote.b1acn01":
-		case "lumi.remote.b1acn01":
 		case "lumi.remote.b186acn01":
 		case "lumi.remote.b286acn01":
 		case "lumi.sensor_motion.aq2":

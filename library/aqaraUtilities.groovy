@@ -5,7 +5,8 @@ library (
 	description: "aqaraUtilities",
 	name: "aqaraUtilities",
 	namespace: "lolcutus",
-	documentationLink: ""
+	documentationLink: "",
+	importUrl: "https://raw.githubusercontent.com/lolcutus/hubitat/master/library/aqaraUtilities.groovy"
 )
 
 Map parseDescription(String description) {

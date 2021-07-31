@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.7.0001
+ *  Version v1.0.7.0002
  
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -48,7 +48,7 @@ metadata {
 void configure() {  
 	def map = setDataForModels()
 	sendEvent(map)
- 	setVersion("v1.0.7.0001")
+ 	setVersion("v1.0.7.0002")
  	if(device.currentValue("batteryLastReplaced") == null){
 		 resetBatteryReplacedDate()
 	}
@@ -138,6 +138,32 @@ private parseButtonMessage(msgMap) {
 	map.isStateChange = true
 	map
 }
+
+private setDataForModels(){
+	def map = [:]
+	def model = getDataValue("model");
+	debugLog("Model string '${model}'")
+	if(model.length() > "lumi.remote.b1acn01".length() && model.startsWith("lumi.remote.b1acn01")){
+		model =  "lumi.remote.b1acn01"
+		updateDataValue("model", model)
+	}
+	state.comment = "Works with model WXKG11LM<BR>For presence to work you need to call 'checkMissed' with a rule one time each hour or more. Contact sensor send battery status each 50 minutes."
+	debugLog("Model '${model}'")
+	switch(model){
+		case "lumi.remote.b1acn01":
+			debugLog("Configure ${model}")
+			if(getDataValue("manufacturer") == null){
+				updateDataValue("manufacturer", "Lumi")
+			}
+			updateDataValue("modelName", "Aqara Wireless Mini Switch")
+			updateDataValue("modelCode", "WXKG11LM")
+			updateDataValue("physicalButtons", "1")
+			map.name = "numberOfButtons"
+			map.value = 1
+			break
+	}
+	map
+}	
 
 def hold(btn){
 	def map = [:]

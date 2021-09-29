@@ -36,8 +36,8 @@ Map parseBattery(value) {
 			batteryVoltajeSecondIndex = 6
 			break
 		case "lumi.sensor_magnet.aq2":
-			batteryVoltajeFirstIndex = 6 
-			batteryVoltajeSecondIndex = 5
+			batteryVoltajeFirstIndex = 8 
+			batteryVoltajeSecondIndex = 6
 			break
 	}
 	def batteryVoltaje = value[batteryVoltajeFirstIndex .. (batteryVoltajeFirstIndex+1)] + value[batteryVoltajeSecondIndex .. (batteryVoltajeSecondIndex+1)]

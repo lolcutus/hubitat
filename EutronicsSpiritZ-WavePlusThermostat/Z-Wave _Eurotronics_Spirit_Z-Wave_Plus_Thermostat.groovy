@@ -1,7 +1,7 @@
 /**
  *  Copyright 2020 Lolcutus
  *
- *  Version v1.0.6.0006
+ *  Version v1.0.5.0002
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -23,14 +23,14 @@ metadata {
 		capability "Sensor"
 		capability "Refresh"
 		capability "Battery"
+		capability "Valve"
 		
 		command "resetBatteryReplacedDate"
 		command "pollBattery"
 		command "setTemperatureOffset"
-		command "updateDriverInfo"
 		
 		attribute "batteryLastReplaced", "Date"
-		attribute "valve", "String"
+		attribute "valvePercent", "String"
 		
 		fingerprint deviceId: "0x01"
 		fingerprint manufacturerId: "328"
@@ -55,7 +55,7 @@ preferences {
  private setVersion(){
 	def map = [:]
  	map.name = "driver"
-	map.value = "v1.0.6.0006"
+	map.value = "v1.0.5.0002"
 	updateDataValue(map.name,map.value)
  }
 
@@ -93,6 +93,7 @@ def poll() {
 	cmds << zwave.thermostatModeV2.thermostatModeGet()
 	cmds << zwave.switchMultilevelV3.switchMultilevelGet() //valve
 	cmds << zwave.batteryV1.batteryGet()
+	cmds << zwave.thermostatModeV2.thermostatModeSupportedGet()
 	sendCommands(cmds,standardBigDelay)
 }
 
@@ -134,19 +135,25 @@ private setTemperatureOffset(){
 def zwaveEvent(hubitat.zwave.commands.switchmultilevelv3.SwitchMultilevelReport cmd){
 	debugLog("Received switchmultilevelv3.SwitchMultilevelReport - ${cmd}")
 	def map = [:]
-	map.name = "valve"
+	map.name = "valvePercent"
 	map.value = cmd.value
 	map.unit = "%"
 	debugLog("Valve open '${cmd.value}'%")
 	def map2 = [:]
+	map2.name = "thermostatOperatingState"
+	def map3 = [:]
+	map3.name = "valve"
 	if(cmd.value == 0){
 		map2.value = "idle" 
+		map3.value = "closed" 
 	}else{
 		map2.value = "heating" 
+		map3.value = "open" 
 	}
-	map2.name = "thermostatOperatingState"
 	infoLog(map2)
+	infoLog(map3)
 	sendEvent(map2)
+    sendEvent(map3)
   map
 }
 
@@ -286,9 +293,11 @@ def zwaveEvent(hubitat.zwave.commands.thermostatmodev2.ThermostatModeSupportedRe
 	def supportedModes = [ 	]
 	if(cmd.off) { supportedModes << "off " }
 	if(cmd.heat) { supportedModes << "heat " }
-	if(cmd.auxiliaryemergencyHeat) { supportedModes << "emergency heat " }
+	//if(cmd.auxiliaryemergencyHeat) { supportedModes << "emergency heat " }
 	if(cmd.cool) { supportedModes << "cool " }
 	if(cmd.auto) { supportedModes << "auto " }
+	
+	supportedModes << "emergency heat "
 	
 	if(supportedModes.size() == 0){
 		supportedModes= modes()

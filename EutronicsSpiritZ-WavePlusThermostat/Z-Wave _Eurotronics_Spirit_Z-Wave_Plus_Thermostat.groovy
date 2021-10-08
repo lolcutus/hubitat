@@ -56,7 +56,7 @@ preferences {
  private setVersion(){
 	def map = [:]
  	map.name = "driver"
-	map.value = "v1.0.5.0002"
+	map.value = "v1.0.6.0007"
 	updateDataValue(map.name,map.value)
  }
 

@@ -81,7 +81,7 @@ def parse(String description) {
 	Map map = [:]
 	
 	def command = msgMap["cluster"] + '_' + msgMap["attrId"]
-	debugLog("Command: ${command}")
+	debugLog("Command: ${command} - value: ${valueHex}")
 	switch(command) {
 		case MODEL:
 		  	map = setDataForModels()
@@ -107,9 +107,9 @@ def parse(String description) {
 	return map
 }
 
-private setDataForModels(){
+private setDataForModels(valueHex){
 	def map = [:]
-	def model = getDataValue("model");
+	def model = valueHex;
    if(model.length() > "lumi.remote.b186acn01".length() && model.startsWith("lumi.remote.b186acn01")){
 		model =  "lumi.remote.b186acn01"
 		updateDataValue("model", model)

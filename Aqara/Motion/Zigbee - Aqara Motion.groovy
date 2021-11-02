@@ -78,7 +78,7 @@ def parse(String description) {
 	Map map = [:]
 	
 	def command = msgMap["cluster"] + '_' + msgMap["attrId"]
-	debugLog("Command: <${command}>")
+	debugLog("Command: ${command} - value: ${valueHex}")
 	switch(command) {
 		case MODEL:
 			map.name = "model"

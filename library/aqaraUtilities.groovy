@@ -24,30 +24,35 @@ Map parseDescription(String description) {
 }
  
 Map parseBattery(value) {
-	def batteryVoltajeFirstIndex = 6
-	def batteryVoltajeSecondIndex = 5
+	def batteryVoltajeFirstIndex = 8
+	def batteryVoltajeSecondIndex = 6
+    def minVolts = 3
+	def maxVolts = 3.1
 	def model = getDataValue("model");
 	switch(model){
 		case "lumi.remote.b1acn01":
 		case "lumi.remote.b186acn01":
 		case "lumi.remote.b286acn01":
 		case "lumi.sensor_motion.aq2":
-			batteryVoltajeFirstIndex = 8 
-			batteryVoltajeSecondIndex = 6
+            minVolts = 3
+	        maxVolts = 3.33
 			break
 		case "lumi.sensor_magnet.aq2":
-			batteryVoltajeFirstIndex = 8 
-			batteryVoltajeSecondIndex = 6
+			minVolts = 2.9
+	        maxVolts = 3.2
 			break
 	}
+    debugLog("batteryVoltajeFirstIndex: " + batteryVoltajeFirstIndex)
 	def batteryVoltaje = value[batteryVoltajeFirstIndex .. (batteryVoltajeFirstIndex+1)] + value[batteryVoltajeSecondIndex .. (batteryVoltajeSecondIndex+1)]
 	debugLog("batteryVoltaje: " + batteryVoltaje)
 	def rawVolts = Integer.parseInt(batteryVoltaje,16)/1000
 	debugLog("rawVolts: " + rawVolts)
-	def minVolts = 2.8
-	def maxVolts = 3.1
+	
 	def pct = (rawVolts - minVolts) / (maxVolts - minVolts)
 	def roundedPct = Math.min(100, Math.round(pct * 100))
+    if(roundedPct < 0) {
+         roundedPct = 0       
+    }
 	def descText = "Battery level is ${roundedPct}% (${rawVolts} Volts)"
 	
 	def map = [:]

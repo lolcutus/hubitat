@@ -1,4 +1,4 @@
-/**
+1/**
  *  Copyright 2020 Lolcutus
  *
  *  Version v1.0.6.0007
@@ -84,6 +84,7 @@ def configure() {
 	cmds << zwave.configurationV1.configurationGet(parameterNumber:8)
 	
 	sendCommands(cmds,standardBigDelay)  
+	poll()
  }
  
 def poll() {
@@ -137,9 +138,13 @@ def zwaveEvent(hubitat.zwave.commands.switchmultilevelv3.SwitchMultilevelReport 
 	debugLog("Received switchmultilevelv3.SwitchMultilevelReport - ${cmd}")
 	def map = [:]
 	map.name = "valvePercent"
-	map.value = cmd.value
+	map.value = Integer.parseInt(cmd.value+"",16)
+	if(map.value > 100){
+		warnLog("error valve value: " + cmd.value + "-" + map.value)
+		map.value = 100
+	}
 	map.unit = "%"
-	debugLog("Valve open '${cmd.value}'%")
+	debugLog("Valve open '${map.value}'%")
 	def map2 = [:]
 	map2.name = "thermostatOperatingState"
 	def map3 = [:]

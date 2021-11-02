@@ -23,8 +23,14 @@ void checkMissed() {
 	}
 }
 void messageReceived(){
-	sendEvent(name: "presence", value: "present")
-	sendEvent(name: "checksMissed", value: "0")
+	def presence = device.currentValue("presence")
+	if(!presence){
+		sendEvent(name: "presence", value: "present")
+	}
+	def currentMissed = device.currentValue("checksMissed")
+	if(currentMissed == null || currentMissed!=0){
+		sendEvent(name: "checksMissed", value: "0")
+	}
 }
 
 void resetBatteryReplacedDate() {
